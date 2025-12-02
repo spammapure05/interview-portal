@@ -32,8 +32,13 @@ export default function CandidateListPage() {
 
   return (
     <div>
-      <h1>{contactIcons.name} Gestione Candidati</h1>
-      <p>Archivia e gestisci i profili dei candidati.</p>
+      <div className="page-header">
+        <div className="page-title">
+          <span className="title-icon" aria-hidden="true" />
+          <h1>{contactIcons.name} Gestione Candidati</h1>
+        </div>
+        <p className="page-sub">Archivia e gestisci i profili dei candidati.</p>
+      </div>
 
       <div className="page-container">
         {/* Sidebar - Form */}
@@ -42,16 +47,19 @@ export default function CandidateListPage() {
         </div>
 
         {/* Main Content - List */}
+
         <div className="page-content">
           {/* Search */}
-          <div className="search-bar">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Cerca per nome, email o telefono..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
+          <div className="search-row">
+            <div className="search-bar large">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Cerca per nome, email o telefono..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="results-count">

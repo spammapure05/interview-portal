@@ -1555,10 +1555,13 @@ input[type="password"]:focus {
 
 .filter-bar.small {
   width: 200px;
-  padding: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.filter-bar.small select { height: 44px; }
+.filter-bar.small select { height: 44px; border-radius: 10px; }
 
 .interview-card {
   display: flex;

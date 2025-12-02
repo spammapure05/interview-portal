@@ -1,13 +1,24 @@
 import sqlite3 from "sqlite3";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.join(__dirname, "database.sqlite");
+// directory persistente per il DB
+const dataDir = path.join(__dirname, "data");
+
+// se non esiste, la creo
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// file del DB nella cartella data
+const dbPath = path.join(dataDir, "database.sqlite");
 
 const db = new sqlite3.Database(dbPath);
+
 
 db.serialize(() => {
   // Utenti

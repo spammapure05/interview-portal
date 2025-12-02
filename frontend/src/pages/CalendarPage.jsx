@@ -5,7 +5,8 @@ import InterviewForm from "../components/InterviewForm";
 import { contactIcons } from "../utils/icons";
 
 export default function CalendarPage() {
-  const { user } = useAuth();
+  const authContext = useAuth();
+  const user = authContext?.user;
   const [interviews, setInterviews] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
@@ -49,7 +50,7 @@ export default function CalendarPage() {
       <div className="page-container">
         {/* Sidebar - Form */}
         <div className="page-sidebar">
-          {(user.role === "secretary" || user.role === "admin") && (
+          {user && (user.role === "secretary" || user.role === "admin") && (
             <InterviewForm onSaved={load} />
           )}
         </div>

@@ -1479,24 +1479,6 @@ input[type="password"]:focus {
   padding-right: 0.5rem;
 }
 
-.list-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.list-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 10px;
-}
-
-.list-container::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.2);
-  border-radius: 10px;
-}
-
-.list-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 70, 229, 0.4);
-}
-
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;

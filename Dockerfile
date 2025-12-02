@@ -8,7 +8,7 @@ COPY frontend ./frontend
 WORKDIR /app/frontend
 # durante il build vogliamo anche i devDependencies (vite, ecc.)
 ENV NODE_ENV=development
-RUN npm install && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 
 FROM node:20-alpine
 
@@ -21,7 +21,7 @@ RUN mkdir -p ./backend/public
 COPY --from=builder /app/frontend/dist ./backend/public
 
 WORKDIR /app/backend
-RUN npm install --omit=dev
+RUN npm install --omit=dev --legacy-peer-deps
 
 ENV PORT=4000
 ENV NODE_ENV=production
@@ -29,3 +29,4 @@ ENV NODE_ENV=production
 EXPOSE 4000
 
 CMD ["node", "server.js"]
+

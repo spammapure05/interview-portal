@@ -64,6 +64,132 @@ a {
   justify-content: center;
 }
 
+/* Login specific styles */
+.login-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eef2ff 0%, #fff7ed 50%, #f0fdf4 100%);
+  padding: 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 8px 30px rgba(16,24,40,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid rgba(16,24,40,0.04);
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.tag {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group {
+  display: block;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+input[type="email"], input[type="password"], input[type="text"] {
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e6e9ee;
+  outline: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.08);
+}
+
+.password-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.password-row input {
+  flex: 1 1 auto;
+}
+
+.password-toggle {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+}
+
+.form-actions {
+  margin-top: 0.25rem;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #4f46e5, #2563eb);
+  color: white;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.login-foot {
+  text-align: center;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 label {
   display: block;
   margin-bottom: 0.5rem;

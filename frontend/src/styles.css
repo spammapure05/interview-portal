@@ -68,16 +68,50 @@ a {
 .login-bg {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35));
   justify-content: center;
   background: linear-gradient(135deg, #eef2ff 0%, #fff7ed 50%, #f0fdf4 100%);
   padding: 2rem;
 }
 
 .login-card {
-  width: 100%;
+  border: 1px solid rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle animated sheen */
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: -40% -40% -40% -40%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.06));
+  transform: rotate(-15deg);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: sheen 6s linear infinite;
   max-width: 420px;
+
+@keyframes sheen {
+  0% { transform: translateX(-20%) rotate(-15deg); }
+  50% { transform: translateX(20%) rotate(-15deg); }
+  100% { transform: translateX(-20%) rotate(-15deg); }
+}
+
+/* animated background gradient (liquid feel) */
+.login-bg {
+  background: linear-gradient(135deg, #e6eefc 0%, #fff4f0 30%, #f3fbf6 60%, #eef7ff 100%);
+  background-size: 400% 400%;
+  animation: bgMove 15s ease infinite;
   background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+
+@keyframes bgMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   box-shadow: 0 8px 30px rgba(16,24,40,0.08);

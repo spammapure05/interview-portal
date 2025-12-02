@@ -6,7 +6,7 @@ import "../styles.css";
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+    const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await login(email, password);
+        await login(identifier, password);
       navigate("/");
     } catch (err) {
       setError("Credenziali non valide");
@@ -42,12 +42,12 @@ export default function LoginPage() {
           <h2 className="sr-only">Login</h2>
 
           <label className="input-group">
-            <span className="input-label">Email</span>
-            <input
-              type="email"
-              placeholder="es. maria@azienda.it"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              <span className="input-label">Email o user id</span>
+              <input
+                type="text"
+                placeholder="es. maria@azienda.it o nome.cognome"
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
               autoComplete="username"
               disabled={loading}
             />

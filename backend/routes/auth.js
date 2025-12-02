@@ -5,11 +5,20 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// login
+// login — supporta `identifier` che può essere email completa o user id (local-part)
 router.post("/login", (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
 
-  db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
+  if (!identifier || !password) return res.status(400).json({ message: "Dati mancanti" });
+
+  // Cerco utente per email esatta oppure per local-part (prima della @)
+  const sql = `
+    SELECT * FROM users
+    WHERE email = ?
+      OR (instr(email, '@') > 0 AND substr(email, 1, instr(email, '@') - 1) = ?)
+  `;
+
+  db.get(sql, [identifier, identifier], async (err, user) => {
     if (err) return res.status(500).json({ message: "Errore DB" });
     if (!user) return res.status(401).json({ message: "Credenziali non valide" });
 

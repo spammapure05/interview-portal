@@ -20,6 +20,7 @@ app.use(express.json());
 
 // Rotte pubbliche
 app.use("/api/auth", authRoutes);
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 // Rotte protette
 app.use("/api", authMiddleware);

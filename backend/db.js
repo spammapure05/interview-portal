@@ -15,7 +15,7 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // file del DB nella cartella data
-const dbPath = path.join(dataDir, "database.sqlite");
+const dbPath = process.env.DB_PATH || path.join(__dirname, "database.sqlite");
 
 const db = new sqlite3.Database(dbPath);
 

@@ -6,6 +6,8 @@ COPY backend ./backend
 COPY frontend ./frontend
 
 WORKDIR /app/frontend
+# durante il build vogliamo anche i devDependencies (vite, ecc.)
+ENV NODE_ENV=development
 RUN npm install && npm run build
 
 FROM node:20-alpine

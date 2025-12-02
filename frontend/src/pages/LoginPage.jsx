@@ -6,7 +6,7 @@ import "../styles.css";
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-    const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,13 +15,13 @@ export default function LoginPage() {
   const handleSubmit = async e => {
     e.preventDefault();
     setError("");
-    if (!email || !password) {
+    if (!identifier || !password) {
       setError("Inserisci email e password");
       return;
     }
     setLoading(true);
     try {
-        await login(identifier, password);
+      await login(identifier, password);
       navigate("/");
     } catch (err) {
       setError("Credenziali non valide");
@@ -34,20 +34,20 @@ export default function LoginPage() {
     <div className="login-bg">
       <div className="login-card">
         <div className="login-brand">
-          <div className="logo">Interview Portal</div>
-          <div className="tag">Gestisci candidati e colloqui</div>
+          <div className="login-logo">Interview Portal</div>
+          <div className="login-tag">Gestisci candidati e colloqui</div>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <h2 className="sr-only">Login</h2>
 
           <label className="input-group">
-              <span className="input-label">Email o user id</span>
-              <input
-                type="text"
-                placeholder="es. maria@azienda.it o nome.cognome"
-                value={identifier}
-                onChange={e => setIdentifier(e.target.value)}
+            <span className="input-label">Email o user id</span>
+            <input
+              type="text"
+              placeholder="es. maria@azienda.it o nome.cognome"
+              value={identifier}
+              onChange={e => setIdentifier(e.target.value)}
               autoComplete="username"
               disabled={loading}
             />

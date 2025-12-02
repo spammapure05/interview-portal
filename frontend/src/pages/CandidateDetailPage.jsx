@@ -51,7 +51,7 @@ export default function CandidateDetailPage() {
 
   return (
     <div>
-      <h1>👤 {candidate.last_name} {candidate.first_name}</h1>
+      <h1>{contactIcons.name} {candidate.last_name} {candidate.first_name}</h1>
       
       <div className="card">
         <h2>Informazioni Personali</h2>

@@ -39,7 +39,7 @@ export default function DashboardPage() {
           <Link to="/calendar">Visualizza calendario →</Link>
         </div>
         <div className="card">
-          <strong>👥 Gestisci Candidati</strong>
+          <strong>{contactIcons.name} Gestisci Candidati</strong>
           <p>Accedi ai profili completi e alle valutazioni.</p>
           <Link to="/candidates">Vai a candidati →</Link>
         </div>

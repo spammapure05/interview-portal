@@ -18,7 +18,7 @@ export default function CandidateListPage() {
 
   return (
     <div>
-      <h1>👥 Gestione Candidati</h1>
+      <h1>{contactIcons.name} Gestione Candidati</h1>
       <p>Archivia e gestisci i profili dei candidati.</p>
 
       <CandidateForm onSaved={load} />

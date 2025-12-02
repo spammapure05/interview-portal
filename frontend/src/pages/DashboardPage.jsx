@@ -1,5 +1,6 @@
 import { useAuth } from "../authContext";
 import { Link } from "react-router-dom";
+import { contactIcons } from "../utils/icons";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -12,12 +13,12 @@ export default function DashboardPage() {
         
         <div className="list">
           <div className="card">
-            <strong>📅 Calendario Colloqui</strong>
+            <strong>{contactIcons.calendar} Calendario Colloqui</strong>
             <p>Visualizza e pianifica tutti i colloqui programmati.</p>
             <Link to="/calendar">Accedi al calendario →</Link>
           </div>
           <div className="card">
-            <strong>👤 Nuovi Candidati</strong>
+            <strong>{contactIcons.name} Nuovi Candidati</strong>
             <p>Registra e archivia i profili dei candidati.</p>
             <Link to="/candidates">Gestisci candidati →</Link>
           </div>
@@ -33,7 +34,7 @@ export default function DashboardPage() {
       
       <div className="list">
         <div className="card">
-          <strong>📅 Calendario Colloqui</strong>
+          <strong>{contactIcons.calendar} Calendario Colloqui</strong>
           <p>Gestisci la pianificazione e il feedback dei colloqui.</p>
           <Link to="/calendar">Visualizza calendario →</Link>
         </div>

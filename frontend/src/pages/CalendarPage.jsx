@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useAuth } from "../authContext";
 import InterviewForm from "../components/InterviewForm";
+import { contactIcons } from "../utils/icons";
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -36,19 +37,19 @@ export default function CalendarPage() {
           {interviews.map(i => (
             <li key={i.id} className="card">
               <strong>
-                {i.first_name} {i.last_name}
+                {contactIcons.interview} {i.first_name} {i.last_name}
               </strong>
               <div>
-                <span>📆 {new Date(i.scheduled_at).toLocaleDateString()}</span>
-                <span>{new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                <span>{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</span>
+                <span>{contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
               </div>
               <div>
-                <span>📍 {i.location || "Luogo non specificato"}</span>
+                <span>{contactIcons.location} {i.location || "Luogo non specificato"}</span>
                 <span className={`status-badge status-${i.status}`}>{i.status}</span>
               </div>
               {"feedback" in i && i.feedback && (
                 <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-                  <strong>💬 Feedback:</strong> {i.feedback}
+                  <strong>{contactIcons.feedback} Feedback:</strong> {i.feedback}
                 </div>
               )}
             </li>

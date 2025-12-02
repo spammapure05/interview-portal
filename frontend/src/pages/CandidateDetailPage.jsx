@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api";
+import { contactIcons } from "../utils/icons";
 
 export default function CandidateDetailPage() {
   const { id } = useParams();
@@ -54,11 +55,11 @@ export default function CandidateDetailPage() {
       
       <div className="card">
         <h2>Informazioni Personali</h2>
-        {candidate.email && <div>📧 <strong>Email:</strong> {candidate.email}</div>}
-        {candidate.phone && <div>☎️ <strong>Telefono:</strong> {candidate.phone}</div>}
+        {candidate.email && <div>{contactIcons.email} <strong>Email:</strong> {candidate.email}</div>}
+        {candidate.phone && <div>{contactIcons.phone} <strong>Telefono:</strong> {candidate.phone}</div>}
         {candidate.notes && (
           <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-            <strong>📝 Note:</strong>
+            <strong>{contactIcons.notes} Note:</strong>
             <p>{candidate.notes}</p>
           </div>
         )}
@@ -74,26 +75,26 @@ export default function CandidateDetailPage() {
           {interviews.map(i => (
             <li key={i.id} className="card">
               <div style={{ marginBottom: "0.75rem" }}>
-                <strong>📆 {new Date(i.scheduled_at).toLocaleDateString()}</strong>
+                <strong>{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</strong>
                 <span style={{ float: "right", color: "#64748b" }}>
-                  {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
-              <div>📍 <strong>Luogo:</strong> {i.location || "Non specificato"}</div>
-              <div>🎯 <strong>Stato:</strong> {i.status}</div>
+              <div>{contactIcons.location} <strong>Luogo:</strong> {i.location || "Non specificato"}</div>
+              <div>{contactIcons.status} <strong>Stato:</strong> {i.status}</div>
               {i.feedback && (
                 <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(0,0,0,0.03)" }}>
-                  <strong>💬 Feedback:</strong> {i.feedback}
+                  <strong>{contactIcons.feedback} Feedback:</strong> {i.feedback}
                 </div>
               )}
               {i.strengths && (
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong>✅ Punti di forza:</strong> {i.strengths}
+                  <strong>{contactIcons.strengths} Punti di forza:</strong> {i.strengths}
                 </div>
               )}
               {i.weaknesses && (
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong>⚠️ Aree di miglioramento:</strong> {i.weaknesses}
+                  <strong>{contactIcons.weaknesses} Aree di miglioramento:</strong> {i.weaknesses}
                 </div>
               )}
             </li>

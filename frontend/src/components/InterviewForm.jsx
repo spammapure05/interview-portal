@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useAuth } from "../authContext";
 import DateTimePicker from "./DateTimePicker";
+import { contactIcons } from "../utils/icons";
 
 export default function InterviewForm({ onSaved }) {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ export default function InterviewForm({ onSaved }) {
 
   return (
     <div className="card card-inline">
-      <h2>➕ Nuovo Colloquio</h2>
+      <h2>{contactIcons.interview} Nuovo Colloquio</h2>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
         <label>
           <span className="input-label">Candidato *</span>

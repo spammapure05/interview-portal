@@ -44,8 +44,13 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <h1>📅 Calendario Colloqui</h1>
-      <p>Visualizza e pianifica i colloqui dei candidati.</p>
+      <div className="page-header">
+        <div className="page-title">
+          <span className="title-icon" aria-hidden="true" />
+          <h1>Calendario Colloqui</h1>
+        </div>
+        <p className="page-sub">Visualizza e pianifica i colloqui dei candidati.</p>
+      </div>
 
       <div className="page-container">
         {/* Sidebar - Form */}
@@ -57,31 +62,32 @@ export default function CalendarPage() {
 
         {/* Main Content - List */}
         <div className="page-content">
-          {/* Search and Filter */}
-          <div className="search-bar">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Cerca per nome o luogo..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
+          {/* Search + Filters Row */}
+          <div className="search-row">
+            <div className="search-bar large">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Cerca per nome, data, luogo..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-          <div className="filter-bar">
-            <div className="filter-label">Filtro Temporale</div>
-            <select
-              value={timeFilter}
-              onChange={e => setTimeFilter(e.target.value)}
-            >
-              <option value="all">📅 Tutti i colloqui</option>
-              <option value="upcoming">⏭️ Prossimi colloqui</option>
-              <option value="past">⏰ Colloqui passati</option>
-            </select>
+            <div className="filter-bar small">
+              <select
+                value={timeFilter}
+                onChange={e => setTimeFilter(e.target.value)}
+              >
+                <option value="all">Tutti</option>
+                <option value="upcoming">Prossimi</option>
+                <option value="past">Passati</option>
+              </select>
+            </div>
           </div>
 
           <div className="results-count">
-            {displayedInterviews.length} colloquio{displayedInterviews.length !== 1 ? "i" : ""} trovato{displayedInterviews.length !== 1 ? "i" : ""}
+            {displayedInterviews.length} risultato{displayedInterviews.length !== 1 ? "i" : ""}
           </div>
 
           {displayedInterviews.length === 0 ? (
@@ -96,18 +102,20 @@ export default function CalendarPage() {
           ) : (
             <div className="list-container">
               {displayedInterviews.map(i => (
-                <div key={i.id} className="card">
-                  <strong>
-                    {contactIcons.interview} {i.first_name} {i.last_name}
-                  </strong>
-                  <div>
-                    <span>{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</span>
-                    <span>{contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                <div key={i.id} className="card interview-card">
+                  <div className="interview-left">
+                    <a className="interview-name">{contactIcons.interview} <span className="name-link">{i.first_name} {i.last_name}</span></a>
+                    <div className="meta-row">
+                      <span className="meta">{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</span>
+                      <span className="meta">{contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span>{contactIcons.location} {i.location || "Luogo non specificato"}</span>
-                    <span className={`status-badge status-${i.status}`}>{i.status}</span>
+
+                  <div className="interview-right">
+                    <div className={`status-badge status-${i.status}`}>{i.status}</div>
+                    <div className="meta-location">{contactIcons.location} {i.location || "Luogo non specificato"}</div>
                   </div>
+
                   {"feedback" in i && i.feedback && (
                     <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
                       <strong>{contactIcons.feedback} Feedback:</strong> {i.feedback}

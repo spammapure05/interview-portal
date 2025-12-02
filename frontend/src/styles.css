@@ -1506,6 +1506,99 @@ input[type="password"]:focus {
   }
 }
 
+/* Calendar page specific visuals */
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(180deg,#0f172a,#1f2937);
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.page-title h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--text-primary);
+}
+
+.page-sub {
+  margin: 0.5rem 0 1rem 0;
+  color: var(--text-muted);
+}
+
+.search-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-bar.large {
+  flex: 1;
+}
+
+.search-bar.large input {
+  height: 56px;
+  padding: 0 1.25rem;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+.filter-bar.small {
+  width: 200px;
+  padding: 0.35rem;
+}
+
+.filter-bar.small select { height: 44px; }
+
+.interview-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.interview-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.interview-name {
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.name-link { margin-left: 0.35rem; }
+
+.meta-row { display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.9rem; }
+
+.interview-right { display:flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: lowercase;
+}
+
+.meta-location { color: var(--text-muted); font-size: 0.9rem; }
+
+
 /* SearchableSelect styles */
 .searchable-select {
   position: relative;

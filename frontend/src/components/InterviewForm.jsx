@@ -25,6 +25,16 @@ export default function InterviewForm({ onSaved }) {
     load();
   }, []);
 
+  // expose a reload for parent open events
+  const reloadCandidates = async () => {
+    try {
+      const res = await api.get("/candidates");
+      setCandidates(res.data);
+    } catch (err) {
+      console.error("Errore ricaricando candidati", err);
+    }
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     if (!candidateId || !dateTime) return;
@@ -59,6 +69,7 @@ export default function InterviewForm({ onSaved }) {
             onChange={val => setCandidateId(val)}
             placeholder="Seleziona un candidato..."
             disabled={loading}
+            onOpen={reloadCandidates}
           />
         </label>
 

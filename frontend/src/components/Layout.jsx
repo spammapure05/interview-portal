@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
+import { contactIcons } from "../utils/icons";
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -28,7 +29,7 @@ export default function Layout() {
             <span className="user-pill">
               {user.email} • <strong>{user.role.toUpperCase()}</strong>
             </span>
-            <button onClick={handleLogout}>Logout</button>
+            <button onClick={handleLogout}>{contactIcons.logout} Logout</button>
           </div>
         )}
       </header>

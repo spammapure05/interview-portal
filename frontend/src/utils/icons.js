@@ -3,7 +3,7 @@ export const contactIcons = {
   email: "✉️",
   phone: "📱",
   notes: "📋",
-  name: "👤",
+  name: "🧑",
   calendar: "📅",
   location: "📍",
   status: "🎯",
@@ -11,7 +11,8 @@ export const contactIcons = {
   strengths: "⭐",
   weaknesses: "🔧",
   time: "🕐",
-  interview: "👔"
+  interview: "👔",
+  logout: "🚪"
 };
 
 export default contactIcons;

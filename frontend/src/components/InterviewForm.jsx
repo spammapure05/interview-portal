@@ -8,6 +8,7 @@ export default function InterviewForm({ onSaved }) {
   const [candidateId, setCandidateId] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [location, setLocation] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -24,61 +25,75 @@ export default function InterviewForm({ onSaved }) {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!candidateId || !dateTime) return;
+    setLoading(true);
+    try {
+      await api.post("/interviews", {
+        candidate_id: Number(candidateId),
+        scheduled_at: dateTime,
+        location
+      });
 
-    await api.post("/interviews", {
-      candidate_id: Number(candidateId),
-      scheduled_at: dateTime,
-      location
-    });
-
-    setCandidateId("");
-    setDateTime("");
-    setLocation("");
-    onSaved && onSaved();
+      setCandidateId("");
+      setDateTime("");
+      setLocation("");
+      onSaved && onSaved();
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!["admin", "secretary"].includes(user.role)) return null;
 
   return (
-    <form className="card card-inline" onSubmit={handleSubmit}>
-      <h2>Nuovo colloquio</h2>
+    <div className="card card-inline">
+      <h2>➕ Nuovo Colloquio</h2>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
+        <label>
+          <span className="input-label">Candidato *</span>
+          <select
+            value={candidateId}
+            onChange={e => setCandidateId(e.target.value)}
+            disabled={loading}
+          >
+            <option value="">Seleziona un candidato...</option>
+            {candidates.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.last_name} {c.first_name}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <label>
-        Candidato
-        <select
-          value={candidateId}
-          onChange={e => setCandidateId(e.target.value)}
+        <label>
+          <span className="input-label">Data e Ora *</span>
+          <input
+            type="datetime-local"
+            value={dateTime}
+            onChange={e => setDateTime(e.target.value)}
+            disabled={loading}
+          />
+        </label>
+
+        <label>
+          <span className="input-label">Luogo</span>
+          <input
+            type="text"
+            placeholder="Es. Sala Riunioni A, Video Call, Esterno..."
+            value={location}
+            onChange={e => setLocation(e.target.value)}
+            disabled={loading}
+          />
+        </label>
+
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={!dateTime || !candidateId || loading}
+          style={{ marginTop: "0.5rem" }}
         >
-          <option value="">Seleziona...</option>
-          {candidates.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.last_name} {c.first_name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label>
-        Data e ora
-        <input
-          type="datetime-local"
-          value={dateTime}
-          onChange={e => setDateTime(e.target.value)}
-        />
-      </label>
-
-      <label>
-        Luogo
-        <input
-          type="text"
-          value={location}
-          onChange={e => setLocation(e.target.value)}
-        />
-      </label>
-
-      <button type="submit" disabled={!dateTime || !candidateId}>
-        Salva
-      </button>
-    </form>
+          {loading ? "Salvataggio..." : "Programma Colloquio"}
+        </button>
+      </form>
+    </div>
   );
 }

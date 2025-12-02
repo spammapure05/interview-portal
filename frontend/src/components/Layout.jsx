@@ -26,7 +26,7 @@ export default function Layout() {
         {user && (
           <div className="app-header-right">
             <span className="user-pill">
-              {user.email} ({user.role})
+              {user.email} • <strong>{user.role.toUpperCase()}</strong>
             </span>
             <button onClick={handleLogout}>Logout</button>
           </div>

@@ -1,12 +1,692 @@
 /* ============================================ */
-/* GLOBAL STYLES                               */
+/* DESIGN SYSTEM & VARIABLES                    */
 /* ============================================ */
 
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  margin: 0;
-  background: #f5f5f7;
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg-light: #f8fafc;
+  --bg-lighter: #f1f5f9;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 }
+
+/* ============================================ */
+/* GLOBAL STYLES & RESET                       */
+/* ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f0f4f8 0%, #f8fafc 100%);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* ============================================ */
+/* FORM ELEMENTS                                */
+/* ============================================ */
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="datetime-local"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="datetime-local"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: linear-gradient(to right, #ffffff, rgba(79, 70, 229, 0.02));
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid var(--danger);
+  border-radius: 6px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================ */
+/* LOGIN PAGE - PREMIUM LIQUID GLASS            */
+/* ============================================ */
+
+@keyframes bgMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(-100%) rotate(-15deg);
+  }
+  50% {
+    transform: translateX(100%) rotate(-15deg);
+  }
+  100% {
+    transform: translateX(-100%) rotate(-15deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(-5deg);
+  }
+}
+
+.login-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #00f2fe 100%
+  );
+  background-size: 400% 400%;
+  animation: bgMove 20s ease infinite;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating orbs for depth */
+.login-bg::before,
+.login-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: float 6s ease-in-out infinite;
+}
+
+.login-bg::before {
+  width: 400px;
+  height: 400px;
+  background: #ffffff;
+  top: -200px;
+  left: -200px;
+}
+
+.login-bg::after {
+  width: 300px;
+  height: 300px;
+  background: #ffffff;
+  bottom: -150px;
+  right: -150px;
+  animation-delay: 3s;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.35));
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 60px rgba(16, 24, 40, 0.15),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  transform: rotate(-15deg);
+  animation: sheen 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  font-weight: 900;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+
+.login-tag {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+  font-weight: 400;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.input-group {
+  display: block;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+  color: #cbd5e1;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: rgba(79, 70, 229, 0.7);
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15),
+              inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.password-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.password-row input {
+  flex: 1;
+  margin: 0;
+}
+
+.password-toggle {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.9rem 0.7rem;
+  width: auto;
+  color: #64748b;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.password-toggle:hover {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.form-actions {
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  border: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3),
+              inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 15px 40px rgba(79, 70, 229, 0.4),
+              inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.login-foot {
+  text-align: center;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================ */
+/* APP LAYOUT                                   */
+/* ============================================ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4f8 0%, #f8fafc 100%);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.app-header-left .logo {
+  font-weight: 800;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.app-header-left nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.app-header-left nav a {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.app-header-left nav a:hover {
+  color: var(--primary);
+}
+
+.app-header-left nav a::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.3s ease;
+}
+
+.app-header-left nav a:hover::after {
+  width: 100%;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-pill {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(37, 99, 235, 0.1));
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.app-header-right button {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  transition: all 0.3s ease;
+}
+
+.app-header-right button:hover {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+.app-main {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+}
+
+/* ============================================ */
+/* CARD COMPONENTS                              */
+/* ============================================ */
+
+.card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.card-inline {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.card h3 {
+  margin: 1rem 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ============================================ */
+/* LIST COMPONENTS                              */
+/* ============================================ */
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.list .card {
+  margin: 0;
+}
+
+.list .card strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.list .card > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.list .card > div:last-child {
+  border: none;
+}
+
+.list .card a {
+  color: var(--primary);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.list .card a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ============================================ */
+/* TYPOGRAPHY                                   */
+/* ============================================ */
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 1.5rem 0 1rem 0;
+}
+
+p {
+  color: var(--text-secondary);
+  margin: 0.75rem 0;
+}
+
+small {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ============================================ */
+/* UTILITIES                                    */
+/* ============================================ */
+
+.centered-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .app-header-left {
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .app-header-left nav {
+    gap: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-card {
+    padding: 2rem;
+    max-width: 100%;
+  }
+}
+
 
 a {
   color: inherit;

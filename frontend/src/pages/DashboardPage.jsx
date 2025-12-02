@@ -7,34 +7,42 @@ export default function DashboardPage() {
   if (user.role === "secretary") {
     return (
       <div>
-        <h1>Dashboard Segreteria</h1>
-        <p>
-          Qui puoi gestire i nuovi candidati e il calendario dei colloqui.
-        </p>
-        <ul>
-          <li>
-            <Link to="/calendar">Vai al Calendario colloqui</Link>
-          </li>
-          <li>
-            <Link to="/candidates">Inserisci un nuovo candidato</Link>
-          </li>
-        </ul>
+        <h1>📋 Dashboard Segreteria</h1>
+        <p>Gestisci candidati e organizza i colloqui efficacemente.</p>
+        
+        <div className="list">
+          <div className="card">
+            <strong>📅 Calendario Colloqui</strong>
+            <p>Visualizza e pianifica tutti i colloqui programmati.</p>
+            <Link to="/calendar">Accedi al calendario →</Link>
+          </div>
+          <div className="card">
+            <strong>👤 Nuovi Candidati</strong>
+            <p>Registra e archivia i profili dei candidati.</p>
+            <Link to="/candidates">Gestisci candidati →</Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1>Dashboard Admin</h1>
-      <p>Panoramica generale dei colloqui e dei candidati.</p>
-      <ul>
-        <li>
-          <Link to="/calendar">Calendario colloqui</Link>
-        </li>
-        <li>
-          <Link to="/candidates">Gestisci candidati</Link>
-        </li>
-      </ul>
+      <h1>👨‍💼 Dashboard Admin</h1>
+      <p>Panoramica completa di candidati, colloqui e valutazioni.</p>
+      
+      <div className="list">
+        <div className="card">
+          <strong>📅 Calendario Colloqui</strong>
+          <p>Gestisci la pianificazione e il feedback dei colloqui.</p>
+          <Link to="/calendar">Visualizza calendario →</Link>
+        </div>
+        <div className="card">
+          <strong>👥 Gestisci Candidati</strong>
+          <p>Accedi ai profili completi e alle valutazioni.</p>
+          <Link to="/candidates">Vai a candidati →</Link>
+        </div>
+      </div>
     </div>
   );
 }

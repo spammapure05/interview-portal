@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useAuth } from "../authContext";
+import DateTimePicker from "./DateTimePicker";
 
 export default function InterviewForm({ onSaved }) {
   const { user } = useAuth();
@@ -66,10 +67,9 @@ export default function InterviewForm({ onSaved }) {
 
         <label>
           <span className="input-label">Data e Ora *</span>
-          <input
-            type="datetime-local"
+          <DateTimePicker
             value={dateTime}
-            onChange={e => setDateTime(e.target.value)}
+            onChange={setDateTime}
             disabled={loading}
           />
         </label>

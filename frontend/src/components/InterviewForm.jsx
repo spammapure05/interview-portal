@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useAuth } from "../authContext";
 import DateTimePicker from "./DateTimePicker";
+import SearchableSelect from "./SearchableSelect";
 import { contactIcons } from "../utils/icons";
 
 export default function InterviewForm({ onSaved }) {
@@ -52,18 +53,13 @@ export default function InterviewForm({ onSaved }) {
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
         <label>
           <span className="input-label">Candidato *</span>
-          <select
+          <SearchableSelect
+            options={candidates.map(c => ({ value: c.id, label: `${c.last_name} ${c.first_name}` }))}
             value={candidateId}
-            onChange={e => setCandidateId(e.target.value)}
+            onChange={val => setCandidateId(val)}
+            placeholder="Seleziona un candidato..."
             disabled={loading}
-          >
-            <option value="">Seleziona un candidato...</option>
-            {candidates.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.last_name} {c.first_name}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <label>

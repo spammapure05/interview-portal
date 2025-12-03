@@ -127,7 +127,11 @@ export default function SearchableSelect({
                   className={`ss-option ${
                     String(option.value) === String(value) ? "ss-selected" : ""
                   }`}
-                  onClick={() => handleSelect(option.value)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelect(option.value);
+                  }}
                   role="option"
                   aria-selected={String(option.value) === String(value)}
                 >

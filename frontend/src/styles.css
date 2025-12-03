@@ -1013,362 +1013,391 @@ input[type="password"]:focus {
   z-index: 1;
 }
 
-/* ============================================ */
-/* DATETIME PICKER - MODERN CALENDAR WIDGET     */
-/* ============================================ */
-
+/* DateTime Picker Modal Overlay */
 .datetime-picker {
   position: relative;
   width: 100%;
 }
 
-.datetime-input-wrapper {
+.dtp-display-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.datetime-display {
+.dtp-display {
   flex: 1;
-  padding: 0.75rem 1rem 0.75rem 1.2rem !important;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border);
   border-radius: 12px;
-  border: 1px solid rgba(79, 70, 229, 0.3) !important;
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: #ffffff;
   cursor: pointer;
   font-weight: 500;
-  color: var(--text-primary) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: all 0.3s ease;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
-.datetime-display:hover:not(:disabled) {
-  border-color: var(--primary) !important;
-  background: rgba(255, 255, 255, 0.8) !important;
+.dtp-display:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.05);
 }
 
-.datetime-display:focus {
+.dtp-display:focus {
   outline: none;
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.datetime-icon {
-  font-size: 1.25rem;
-  cursor: pointer;
+.dtp-trigger-btn {
+  font-size: 1.2rem;
   padding: 0.6rem;
+  border: 2px solid var(--border);
   border-radius: 10px;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
+  flex-shrink: 0;
+}
+
+.dtp-trigger-btn:hover {
+  border-color: var(--primary);
   background: rgba(79, 70, 229, 0.05);
 }
 
-.datetime-icon:hover {
-  background: rgba(79, 70, 229, 0.15);
-  transform: scale(1.05);
+.dtp-trigger-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-.datetime-picker-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-  border: 2px solid var(--primary);
-  border-radius: 14px;
-  padding: 1.5rem;
-  box-shadow: 0 16px 48px rgba(79, 70, 229, 0.2), 0 0 0 1px rgba(79, 70, 229, 0.1);
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  width: calc(100vw - 2rem);
-  max-width: 420px;
-  max-height: 500px;
-  overflow-y: auto;
-  pointer-events: auto;
-}
-
-@media (max-width: 768px) {
-  .datetime-picker-dropdown {
-    width: 95vw;
-    max-width: 95vw;
-    padding: 1.25rem;
-  }
-}
-
-/* Calendar Section */
-.cal-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.cal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  gap: 0.5rem;
-}
-
-.cal-nav {
-  background: rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(79, 70, 229, 0.2) !important;
-  color: var(--primary);
-  width: 32px !important;
-  height: 32px;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 8px !important;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* Modal Overlay */
+.dtp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
 }
 
-.cal-nav:hover:not(:disabled) {
-  background: rgba(79, 70, 229, 0.2);
+.dtp-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  z-index: 10000;
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-.cal-nav:disabled {
+.dtp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.dtp-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dtp-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dtp-close-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+}
+
+.dtp-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Calendar Section */
+.dtp-cal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dtp-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dtp-cal-nav button {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dtp-cal-nav button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.dtp-cal-nav button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.cal-month-year {
+.dtp-cal-month {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text-primary);
+  text-transform: capitalize;
   flex: 1;
   text-align: center;
-  text-transform: capitalize;
 }
 
-.cal-weekdays {
+.dtp-cal-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
-  margin-bottom: 0.3rem;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
 }
 
-.cal-weekdays > div {
+.dtp-cal-weekdays div {
   text-align: center;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  padding: 0.35rem 0;
-  letter-spacing: 0.2px;
+  padding: 0.4rem;
+  letter-spacing: 0.3px;
 }
 
-.cal-grid {
+.dtp-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 
-.cal-day {
+.dtp-cal-day {
   aspect-ratio: 1;
-  border: 1px solid rgba(79, 70, 229, 0.15) !important;
-  background: rgba(255, 255, 255, 0.5) !important;
-  color: var(--text-primary) !important;
-  border-radius: 8px !important;
+  border: 2px solid var(--border);
+  background: #ffffff;
+  color: var(--text-primary);
+  border-radius: 10px;
   font-weight: 500;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 36px;
 }
 
-.cal-day:hover:not(:disabled) {
-  background: rgba(79, 70, 229, 0.1) !important;
-  border-color: var(--primary) !important;
+.dtp-cal-day:hover {
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.05);
+  transform: scale(1.05);
 }
 
-.cal-day.selected {
-  background: linear-gradient(135deg, var(--primary), var(--accent)) !important;
-  color: white !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+.dtp-cal-day.dtp-selected {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.cal-day.today {
-  border-color: var(--accent) !important;
+.dtp-cal-day.dtp-today {
+  border-color: var(--accent);
   font-weight: 600;
 }
 
-.cal-day:disabled {
+.dtp-cal-day:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.cal-empty {
+.dtp-cal-empty {
   aspect-ratio: 1;
-  min-height: 32px;
+  min-height: 36px;
 }
 
 /* Time Section */
-.time-section {
+.dtp-time-section {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  padding-top: 0.75rem;
+  padding: 1rem;
+  background: rgba(79, 70, 229, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(79, 70, 229, 0.1);
 }
 
-.time-header {
+.dtp-time-label {
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  margin: 0;
 }
 
-.time-inputs {
+.dtp-time-inputs {
   display: flex;
   align-items: flex-end;
-  gap: 0.75rem;
   justify-content: center;
+  gap: 0.5rem;
 }
 
-.time-field {
+.dtp-time-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
-.time-field label {
+.dtp-time-input {
+  width: 60px;
+  padding: 0.6rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary);
+  background: #ffffff;
+  cursor: text;
+  transition: all 0.2s ease;
+}
+
+.dtp-time-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.dtp-time-input::-webkit-outer-spin-button,
+.dtp-time-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dtp-time-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.dtp-time-label-sm {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.2px;
-  margin: 0 !important;
+  margin-top: 0.25rem;
 }
 
-.time-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-}
-
-.spinner-btn {
-  width: 28px !important;
-  height: 24px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: rgba(79, 70, 229, 0.1) !important;
-  border: 1px solid rgba(79, 70, 229, 0.2) !important;
-  color: var(--primary);
-  border-radius: 6px !important;
-  font-weight: 600;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spinner-btn:hover:not(:disabled) {
-  background: rgba(79, 70, 229, 0.2) !important;
-}
-
-.spinner-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.time-input {
-  width: 45px !important;
-  height: 38px;
-  text-align: center;
+.dtp-time-sep {
   font-weight: 700;
-  font-size: 1rem;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 8px !important;
-  border: 2px solid rgba(79, 70, 229, 0.2) !important;
-  background: rgba(255, 255, 255, 0.7) !important;
+  font-size: 1.3rem;
   color: var(--primary);
-  transition: all 0.2s ease;
-}
-
-.time-input:focus {
-  border-color: var(--primary) !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1) !important;
-}
-
-/* Remove number input spinners */
-.time-input::-webkit-outer-spin-button,
-.time-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.time-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-.time-separator {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--text-primary);
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
 }
 
 /* Footer */
-.datetime-footer {
+.dtp-footer {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  padding-top: 0.75rem;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.02);
+  flex-shrink: 0;
 }
 
-.btn-close-picker {
+.dtp-btn-cancel,
+.dtp-btn-confirm {
   flex: 1;
-  padding: 0.65rem 1rem !important;
-  background: linear-gradient(135deg, var(--success), #059669) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
+  padding: 0.8rem 1.2rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
   text-transform: uppercase;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
 }
 
-.btn-close-picker:hover {
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+.dtp-btn-cancel {
+  background: #ffffff;
+  color: var(--text-primary);
 }
 
-.btn-close-picker:disabled {
+.dtp-btn-cancel:hover {
+  border-color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dtp-btn-confirm {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border-color: var(--primary);
+}
+
+.dtp-btn-confirm:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+  transform: translateY(-2px);
+}
+
+.dtp-btn-confirm:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
 }
-
-/* Backdrop overlay removed - was blocking interaction and causing blur */
 
 /* ============================================ */
 /* TWO-COLUMN LAYOUT - FORMS + LISTS             */

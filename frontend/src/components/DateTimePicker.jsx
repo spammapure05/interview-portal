@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function DateTimePicker({ value, onChange, disabled = false }) {
+  const [showModal, setShowModal] = useState(false);
   const [date, setDate] = useState(value ? new Date(value) : new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date(date));
   const [selectedHour, setSelectedHour] = useState(date.getHours().toString().padStart(2, "0"));
   const [selectedMinute, setSelectedMinute] = useState(date.getMinutes().toString().padStart(2, "0"));
@@ -22,23 +23,18 @@ export default function DateTimePicker({ value, onChange, disabled = false }) {
 
   const handleDateSelect = (day) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    newDate.setHours(parseInt(selectedHour), parseInt(selectedMinute));
+    newDate.setHours(parseInt(selectedHour, 10), parseInt(selectedMinute, 10));
     setDate(newDate);
-    updateParent(newDate);
   };
 
-  const handleTimeChange = (hour, minute) => {
-    const newDate = new Date(date);
-    newDate.setHours(parseInt(hour || 0), parseInt(minute || 0));
-    setDate(newDate);
-    setSelectedHour(hour);
-    setSelectedMinute(minute);
-    updateParent(newDate);
-  };
-
-  const updateParent = (newDate) => {
-    const iso = newDate.toISOString().slice(0, 16);
+  const handleConfirm = () => {
+    const iso = date.toISOString().slice(0, 16);
     onChange(iso);
+    setShowModal(false);
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
   };
 
   const handlePrevMonth = () => {
@@ -54,12 +50,10 @@ export default function DateTimePicker({ value, onChange, disabled = false }) {
     const firstDay = getFirstDayOfMonth(currentMonth);
     const days = [];
 
-    // Empty cells
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="cal-empty"></div>);
+      days.push(<div key={`empty-${i}`} className="dtp-cal-empty"></div>);
     }
 
-    // Days
     for (let day = 1; day <= daysInMonth; day++) {
       const isSelected =
         day === date.getDate() &&
@@ -74,7 +68,7 @@ export default function DateTimePicker({ value, onChange, disabled = false }) {
         <button
           key={day}
           type="button"
-          className={`cal-day ${isSelected ? "selected" : ""} ${isToday ? "today" : ""}`}
+          className={`dtp-cal-day ${isSelected ? "dtp-selected" : ""} ${isToday ? "dtp-today" : ""}`}
           onClick={() => handleDateSelect(day)}
           disabled={disabled}
         >
@@ -87,49 +81,32 @@ export default function DateTimePicker({ value, onChange, disabled = false }) {
   };
 
   const monthYear = currentMonth.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+  const displayDate = `${date.toLocaleDateString("it-IT")} ${selectedHour}:${selectedMinute}`;
 
-  return (
-    <div className="datetime-picker">
-      <div className="datetime-input-wrapper">
-        <input
-          type="text"
-          className="datetime-display"
-          value={`${date.toLocaleDateString("it-IT")} ${selectedHour}:${selectedMinute}`}
-          onClick={() => setShowCalendar(!showCalendar)}
-          readOnly
-          disabled={disabled}
-          placeholder="Seleziona data e ora"
-        />
-        <span className="datetime-icon" onClick={() => setShowCalendar(!showCalendar)}>
-          📅
-        </span>
-      </div>
+  const modal = (
+    <div className="dtp-overlay">
+      <div className="dtp-modal">
+        <div className="dtp-header">
+          <h3>Seleziona Data e Ora</h3>
+          <button type="button" className="dtp-close-btn" onClick={handleCancel}>
+            ✕
+          </button>
+        </div>
 
-      {showCalendar && (
-        <div className="datetime-picker-dropdown">
-          {/* Calendar Section */}
-          <div className="cal-section">
-            <div className="cal-header">
-              <button
-                type="button"
-                className="cal-nav"
-                onClick={handlePrevMonth}
-                disabled={disabled}
-              >
+        <div className="dtp-content">
+          {/* Calendar */}
+          <div className="dtp-cal-section">
+            <div className="dtp-cal-nav">
+              <button type="button" onClick={handlePrevMonth} disabled={disabled}>
                 ◀
               </button>
-              <div className="cal-month-year">{monthYear}</div>
-              <button
-                type="button"
-                className="cal-nav"
-                onClick={handleNextMonth}
-                disabled={disabled}
-              >
+              <span className="dtp-cal-month">{monthYear}</span>
+              <button type="button" onClick={handleNextMonth} disabled={disabled}>
                 ▶
               </button>
             </div>
 
-            <div className="cal-weekdays">
+            <div className="dtp-cal-weekdays">
               <div>Do</div>
               <div>Lu</div>
               <div>Ma</div>
@@ -139,110 +116,88 @@ export default function DateTimePicker({ value, onChange, disabled = false }) {
               <div>Sa</div>
             </div>
 
-            <div className="cal-grid">{renderCalendar()}</div>
+            <div className="dtp-cal-grid">{renderCalendar()}</div>
           </div>
 
-          {/* Time Section */}
-          <div className="time-section">
-            <div className="time-header">Ora</div>
-            <div className="time-inputs">
-              <div className="time-field">
-                <label>Ore</label>
-                <div className="time-spinner">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const h = (parseInt(selectedHour) + 1) % 24;
-                      handleTimeChange(h.toString().padStart(2, "0"), selectedMinute);
-                    }}
-                    disabled={disabled}
-                    className="spinner-btn"
-                  >
-                    ▲
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={selectedHour}
-                    onChange={(e) => {
-                      const val = e.target.value.padStart(2, "0");
-                      if (val <= "23") handleTimeChange(val, selectedMinute);
-                    }}
-                    disabled={disabled}
-                    className="time-input"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const h = (parseInt(selectedHour) - 1 + 24) % 24;
-                      handleTimeChange(h.toString().padStart(2, "0"), selectedMinute);
-                    }}
-                    disabled={disabled}
-                    className="spinner-btn"
-                  >
-                    ▼
-                  </button>
-                </div>
+          {/* Time */}
+          <div className="dtp-time-section">
+            <label className="dtp-time-label">Ora</label>
+            <div className="dtp-time-inputs">
+              <div className="dtp-time-field">
+                <input
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={selectedHour}
+                  onChange={(e) => {
+                    let val = e.target.value.padStart(2, "0");
+                    if (parseInt(val, 10) > 23) val = "23";
+                    setSelectedHour(val);
+                  }}
+                  disabled={disabled}
+                  className="dtp-time-input"
+                />
+                <span className="dtp-time-label-sm">Ore</span>
               </div>
 
-              <div className="time-separator">:</div>
+              <span className="dtp-time-sep">:</span>
 
-              <div className="time-field">
-                <label>Minuti</label>
-                <div className="time-spinner">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const m = (parseInt(selectedMinute) + 15) % 60;
-                      handleTimeChange(selectedHour, m.toString().padStart(2, "0"));
-                    }}
-                    disabled={disabled}
-                    className="spinner-btn"
-                  >
-                    ▲
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    step="15"
-                    value={selectedMinute}
-                    onChange={(e) => {
-                      const val = e.target.value.padStart(2, "0");
-                      if (val <= "59") handleTimeChange(selectedHour, val);
-                    }}
-                    disabled={disabled}
-                    className="time-input"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const m = (parseInt(selectedMinute) - 15 + 60) % 60;
-                      handleTimeChange(selectedHour, m.toString().padStart(2, "0"));
-                    }}
-                    disabled={disabled}
-                    className="spinner-btn"
-                  >
-                    ▼
-                  </button>
-                </div>
+              <div className="dtp-time-field">
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={selectedMinute}
+                  onChange={(e) => {
+                    let val = e.target.value.padStart(2, "0");
+                    if (parseInt(val, 10) > 59) val = "59";
+                    setSelectedMinute(val);
+                  }}
+                  disabled={disabled}
+                  className="dtp-time-input"
+                />
+                <span className="dtp-time-label-sm">Min</span>
               </div>
             </div>
           </div>
-
-          {/* Close Button */}
-          <div className="datetime-footer">
-            <button
-              type="button"
-              className="btn-close-picker"
-              onClick={() => setShowCalendar(false)}
-            >
-              ✓ Conferma
-            </button>
-          </div>
         </div>
-      )}
+
+        <div className="dtp-footer">
+          <button type="button" className="dtp-btn-cancel" onClick={handleCancel}>
+            Annulla
+          </button>
+          <button type="button" className="dtp-btn-confirm" onClick={handleConfirm} disabled={disabled}>
+            ✓ Conferma
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="datetime-picker">
+      <div className="dtp-display-wrapper">
+        <input
+          type="text"
+          className="dtp-display"
+          value={displayDate}
+          readOnly
+          disabled={disabled}
+          onClick={() => !disabled && setShowModal(true)}
+          placeholder="Seleziona data e ora"
+        />
+        <button
+          type="button"
+          className="dtp-trigger-btn"
+          onClick={() => !disabled && setShowModal(true)}
+          disabled={disabled}
+          aria-label="Apri calendario"
+        >
+          📅
+        </button>
+      </div>
+
+      {showModal ? createPortal(modal, document.body) : null}
     </div>
   );
 }

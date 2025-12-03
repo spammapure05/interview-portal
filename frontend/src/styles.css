@@ -1617,7 +1617,7 @@ input[type="password"]:focus {
 .meta-location { color: var(--text-muted); font-size: 0.9rem; }
 
 
-/* SearchableSelect styles */
+/* SearchableSelect styles - Complete Redesign */
 .searchable-select {
   position: relative;
   width: 100%;
@@ -1625,44 +1625,95 @@ input[type="password"]:focus {
 
 .ss-control {
   display: flex;
-  gap: 0.5rem;
   align-items: center;
-  border: 1px solid rgba(79,70,229,0.12);
-  border-radius: 10px;
-  padding: 0.25rem;
-  background: rgba(255,255,255,0.6);
+  gap: 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
-.ss-control.disabled { opacity: 0.6; pointer-events: none; }
+.ss-control:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.05);
+}
+
+.ss-control.ss-open {
+  border-color: var(--primary);
+  background: linear-gradient(to right, #ffffff, rgba(79, 70, 229, 0.02));
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.ss-control.ss-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  background: #f5f5f5;
+}
 
 .ss-input {
   flex: 1;
   border: none;
   outline: none;
-  padding: 0.6rem 0.5rem;
-  font-weight: 500;
+  padding: 0;
   background: transparent;
+  font-size: inherit;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.ss-input::placeholder {
+  color: var(--text-muted);
 }
 
 .ss-arrow {
-  background: transparent;
-  border: none;
-  font-size: 1rem;
-  padding: 0.25rem 0.6rem;
-  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--primary);
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
 .ss-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(79,70,229,0.12);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
+  background: #ffffff;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(79, 70, 229, 0.15), 0 0 0 1px rgba(79, 70, 229, 0.1);
   z-index: 2200;
-  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.ss-search {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  outline: none;
+  border-bottom: 2px solid var(--border);
+  font-size: 0.95rem;
+  background: #fafafa;
+  font-family: inherit;
+}
+
+.ss-search:focus {
+  background: #ffffff;
+  border-bottom-color: var(--primary);
+}
+
+.ss-search::placeholder {
+  color: var(--text-muted);
+}
+
+.ss-options-container {
+  flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
   display: flex;
@@ -1672,19 +1723,35 @@ input[type="password"]:focus {
 
 .ss-option {
   text-align: left;
-  padding: 0.5rem;
+  padding: 0.75rem 0.85rem;
   border-radius: 8px;
   background: transparent;
   border: none;
   cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
 }
 
-.ss-option:hover { background: rgba(79,70,229,0.06); }
-.ss-option.selected { background: linear-gradient(90deg,var(--primary),var(--accent)); color: white; }
-
-.ss-option.highlight {
-  background: rgba(79,70,229,0.12);
+.ss-option:hover {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(37, 99, 235, 0.08));
 }
 
-.ss-empty { padding: 0.5rem; color: var(--text-muted); text-align:center; }
+.ss-option.ss-selected {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ss-option.ss-selected:hover {
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.ss-empty {
+  padding: 1.5rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.9rem;
+}
 

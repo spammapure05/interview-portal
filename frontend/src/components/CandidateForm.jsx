@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../api";
 
-export default function CandidateForm({ onSaved }) {
+export default function CandidateForm({ candidate, onSaved }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (candidate) {
+      setFirstName(candidate.first_name || "");
+      setLastName(candidate.last_name || "");
+      setEmail(candidate.email || "");
+      setPhone(candidate.phone || "");
+      setNotes(candidate.notes || "");
+    }
+  }, [candidate]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async e => {
@@ -14,18 +24,28 @@ export default function CandidateForm({ onSaved }) {
     if (!firstName || !lastName) return;
     setLoading(true);
     try {
-      await api.post("/candidates", {
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        notes
-      });
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPhone("");
-      setNotes("");
+      if (candidate && candidate.id) {
+        await api.put(`/candidates/${candidate.id}`, {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          notes
+        });
+      } else {
+        await api.post("/candidates", {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          notes
+        });
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPhone("");
+        setNotes("");
+      }
       onSaved && onSaved();
     } finally {
       setLoading(false);
@@ -34,7 +54,7 @@ export default function CandidateForm({ onSaved }) {
 
   return (
     <div className="card card-inline">
-      <h2>➕ Nuovo Candidato</h2>
+      <h2>{candidate ? "✏️ Modifica Candidato" : "➕ Nuovo Candidato"}</h2>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <label>
@@ -94,7 +114,9 @@ export default function CandidateForm({ onSaved }) {
           disabled={!firstName || !lastName || loading}
           style={{ marginTop: "0.5rem" }}
         >
-          {loading ? "Salvataggio..." : "Salva Candidato"}
+          {loading
+            ? (candidate ? "Aggiornamento..." : "Salvataggio...")
+            : (candidate ? "Aggiorna Candidato" : "Salva Candidato")}
         </button>
       </form>
     </div>

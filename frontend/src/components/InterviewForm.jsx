@@ -5,12 +5,12 @@ import DateTimePicker from "./DateTimePicker";
 import SearchableSelect from "./SearchableSelect";
 import { contactIcons } from "../utils/icons";
 
-export default function InterviewForm({ onSaved }) {
+export default function InterviewForm({ interview, onSaved, onCancel }) {
   const { user } = useAuth();
   const [candidates, setCandidates] = useState([]);
-  const [candidateId, setCandidateId] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const [location, setLocation] = useState("");
+  const [candidateId, setCandidateId] = useState(interview ? interview.candidate_id : "");
+  const [dateTime, setDateTime] = useState(interview ? interview.scheduled_at : "");
+  const [location, setLocation] = useState(interview ? interview.location : "");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,6 +24,14 @@ export default function InterviewForm({ onSaved }) {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (interview) {
+      setCandidateId(interview.candidate_id);
+      setDateTime(interview.scheduled_at);
+      setLocation(interview.location || "");
+    }
+  }, [interview]);
 
   // expose a reload for parent open events
   const reloadCandidates = async () => {
@@ -40,15 +48,22 @@ export default function InterviewForm({ onSaved }) {
     if (!candidateId || !dateTime) return;
     setLoading(true);
     try {
-      await api.post("/interviews", {
-        candidate_id: Number(candidateId),
-        scheduled_at: dateTime,
-        location
-      });
-
-      setCandidateId("");
-      setDateTime("");
-      setLocation("");
+      if (interview && interview.id) {
+        await api.put(`/interviews/${interview.id}`, {
+          candidate_id: Number(candidateId),
+          scheduled_at: dateTime,
+          location
+        });
+      } else {
+        await api.post("/interviews", {
+          candidate_id: Number(candidateId),
+          scheduled_at: dateTime,
+          location
+        });
+        setCandidateId("");
+        setDateTime("");
+        setLocation("");
+      }
       onSaved && onSaved();
     } finally {
       setLoading(false);
@@ -93,14 +108,20 @@ export default function InterviewForm({ onSaved }) {
           />
         </label>
 
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={!dateTime || !candidateId || loading}
-          style={{ marginTop: "0.5rem" }}
-        >
-          {loading ? "Salvataggio..." : "Programma Colloquio"}
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={!dateTime || !candidateId || loading}
+          >
+            {interview ? "Aggiorna Colloquio" : "Salva Colloquio"}
+          </button>
+          {onCancel && (
+            <button type="button" className="btn-secondary" onClick={onCancel} disabled={loading}>
+              Annulla
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

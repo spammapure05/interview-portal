@@ -50,7 +50,7 @@ db.serialize(() => {
       candidate_id INTEGER NOT NULL,
       scheduled_at TEXT NOT NULL,
       location TEXT,
-      status TEXT DEFAULT 'scheduled',
+      status TEXT DEFAULT 'Programmato',
       feedback TEXT,
       strengths TEXT,
       weaknesses TEXT,

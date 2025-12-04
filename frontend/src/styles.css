@@ -1771,3 +1771,92 @@ input[type="password"]:focus {
   font-size: 0.9rem;
 }
 
+/* ============================================ */
+/* STATUS BADGE STYLES                         */
+/* ============================================ */
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.status-Programmato {
+  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  color: #0c4a6e;
+  border: 1px solid #06b6d4;
+  box-shadow: 0 1px 3px rgba(6, 182, 212, 0.1);
+}
+
+.status-badge.status-Annullato {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #7f1d1d;
+  border: 1px solid #dc2626;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1);
+}
+
+.status-badge.status-Completato {
+  background: linear-gradient(135deg, #dcfce7, #d1fae5);
+  color: #166534;
+  border: 1px solid #10b981;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+}
+
+/* ============================================ */
+/* MODAL OVERLAY & DIALOG STYLES               */
+/* ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-dialog {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-dialog h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.modal-dialog p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+

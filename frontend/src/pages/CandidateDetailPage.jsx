@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api";
 import { contactIcons } from "../utils/icons";
+import CandidateForm from "../components/CandidateForm";
 
 export default function CandidateDetailPage() {
   const { id } = useParams();
@@ -12,6 +13,8 @@ export default function CandidateDetailPage() {
   const [weaknesses, setWeaknesses] = useState("");
   const [selectedInterviewId, setSelectedInterviewId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editInterview, setEditInterview] = useState(null);
+  const [cancelConfirm, setCancelConfirm] = useState(null);
 
   const load = async () => {
     const [candRes, intRes] = await Promise.all([
@@ -47,23 +50,31 @@ export default function CandidateDetailPage() {
     }
   };
 
+
+  const [editMode, setEditMode] = useState(false);
   if (!candidate) return <div className="card">Caricamento...</div>;
 
   return (
     <div>
       <h1>{contactIcons.name} {candidate.last_name} {candidate.first_name}</h1>
-      
-      <div className="card">
-        <h2>Informazioni Personali</h2>
-        {candidate.email && <div>{contactIcons.email} <strong>Email:</strong> {candidate.email}</div>}
-        {candidate.phone && <div>{contactIcons.phone} <strong>Telefono:</strong> {candidate.phone}</div>}
-        {candidate.notes && (
-          <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-            <strong>{contactIcons.notes} Note:</strong>
-            <p>{candidate.notes}</p>
-          </div>
-        )}
-      </div>
+      <button className="btn-secondary" style={{ float: "right", marginTop: "-2.5rem" }} onClick={() => setEditMode(e => !e)}>
+        {editMode ? "Annulla" : "Modifica"}
+      </button>
+      {editMode ? (
+        <CandidateForm candidate={candidate} onSaved={() => { setEditMode(false); load(); }} />
+      ) : (
+        <div className="card">
+          <h2>Informazioni Personali</h2>
+          {candidate.email && <div>{contactIcons.email} <strong>Email:</strong> {candidate.email}</div>}
+          {candidate.phone && <div>{contactIcons.phone} <strong>Telefono:</strong> {candidate.phone}</div>}
+          {candidate.notes && (
+            <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+              <strong>{contactIcons.notes} Note:</strong>
+              <p>{candidate.notes}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <h2>📅 Colloqui ({interviews.length})</h2>
       {interviews.length === 0 ? (
@@ -97,68 +108,63 @@ export default function CandidateDetailPage() {
                   <strong>{contactIcons.weaknesses} Aree di miglioramento:</strong> {i.weaknesses}
                 </div>
               )}
+              <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+                <button className="btn-secondary" onClick={() => setEditInterview(i)}>
+                  Modifica
+                </button>
+                {i.status === "Programmato" && (
+                  <button className="btn-danger" onClick={() => setCancelConfirm(i)}>
+                    Annulla
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
       )}
 
-      {interviews.length > 0 && (
-        <div className="card">
-          <h2>📋 Aggiungi / Modifica Valutazione (Solo Admin)</h2>
-          <form onSubmit={handleSaveFeedback} style={{ display: "grid", gap: "0.75rem" }}>
-            <label>
-              <span className="input-label">Seleziona Colloquio *</span>
-              <select
-                value={selectedInterviewId}
-                onChange={e => setSelectedInterviewId(e.target.value)}
-                disabled={loading}
+      {/* Modale di modifica evento */}
+      {editInterview && (
+        <div className="modal-overlay">
+          <div className="modal-dialog">
+            <h2>Modifica Colloquio</h2>
+            <InterviewForm
+              interview={editInterview}
+              onSaved={() => { setEditInterview(null); load(); }}
+              onCancel={() => setEditInterview(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modale di conferma annullamento evento */}
+      {cancelConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-dialog" style={{ maxWidth: "400px" }}>
+            <h2>Conferma Annullamento</h2>
+            <p>Sei sicuro di voler annullare questo colloquio?</p>
+            <p style={{ fontSize: "0.9rem", color: "#64748b", marginTop: "1rem" }}>
+              Data: {new Date(cancelConfirm.scheduled_at).toLocaleString()}
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.5rem" }}>
+              <button 
+                className="btn-danger" 
+                onClick={async () => {
+                  await api.put(`/interviews/${cancelConfirm.id}`, { status: "Annullato" });
+                  setCancelConfirm(null);
+                  load();
+                }}
               >
-                <option value="">Scegli un colloquio...</option>
-                {interviews.map(i => (
-                  <option key={i.id} value={i.id}>
-                    {new Date(i.scheduled_at).toLocaleString()}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span className="input-label">Feedback</span>
-              <textarea
-                placeholder="Aggiungi feedback generale..."
-                value={feedback}
-                onChange={e => setFeedback(e.target.value)}
-                disabled={loading}
-                style={{ minHeight: "100px" }}
-              />
-            </label>
-            <label>
-              <span className="input-label">Punti di Forza</span>
-              <textarea
-                placeholder="Elencare i principali punti di forza..."
-                value={strengths}
-                onChange={e => setStrengths(e.target.value)}
-                disabled={loading}
-                style={{ minHeight: "100px" }}
-              />
-            </label>
-            <label>
-              <span className="input-label">Aree di Miglioramento</span>
-              <textarea
-                placeholder="Indicare le aree su cui migliorare..."
-                value={weaknesses}
-                onChange={e => setWeaknesses(e.target.value)}
-                disabled={loading}
-                style={{ minHeight: "100px" }}
-              />
-            </label>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={!selectedInterviewId || loading}
-            >
-              {loading ? "Salvataggio..." : "Salva Valutazione"}
-            </button>
-          </form>
+                Sì, Annulla Colloquio
+              </button>
+              <button 
+                className="btn-secondary" 
+                onClick={() => setCancelConfirm(null)}
+              >
+                No, Torna Indietro
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -42,4 +42,22 @@ router.get("/:id", requireRole("admin"), (req, res) => {
   });
 });
 
+
+// Modifica candidato – admin o segreteria
+router.put('/:id', requireRole('admin', 'secretary'), (req, res) => {
+  const { first_name, last_name, email, phone, notes } = req.body;
+  if (!first_name || !last_name) {
+    return res.status(400).json({ message: 'Nome e cognome sono obbligatori' });
+  }
+  db.run(
+    `UPDATE candidates SET first_name = ?, last_name = ?, email = ?, phone = ?, notes = ? WHERE id = ?`,
+    [first_name, last_name, email || null, phone || null, notes || null, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ message: 'Errore DB' });
+      if (this.changes === 0) return res.status(404).json({ message: 'Candidato non trovato' });
+      res.json({ updated: true });
+    }
+  );
+});
+
 export default router;

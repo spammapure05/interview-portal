@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import api from "../api";
 import { contactIcons } from "../utils/icons";
 import CandidateForm from "../components/CandidateForm";
+import { useAuth } from "../authContext";
 
 export default function CandidateDetailPage() {
   const { id } = useParams();
@@ -52,19 +53,22 @@ export default function CandidateDetailPage() {
 
 
   const [editMode, setEditMode] = useState(false);
+  const { user } = useAuth();
   if (!candidate) return <div className="card">Caricamento...</div>;
 
   return (
     <div>
-      <h1>{contactIcons.name} {candidate.last_name} {candidate.first_name}</h1>
-      <button className="btn-secondary" style={{ float: "right", marginTop: "-2.5rem" }} onClick={() => setEditMode(e => !e)}>
-        {editMode ? "Annulla" : "Modifica"}
-      </button>
+      <h1 style={{ margin: "0 0 1rem 0" }}>{contactIcons.name} {candidate.last_name} {candidate.first_name}</h1>
       {editMode ? (
         <CandidateForm candidate={candidate} onSaved={() => { setEditMode(false); load(); }} />
       ) : (
         <div className="card">
-          <h2>Informazioni Personali</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ margin: 0 }}>Informazioni Personali</h2>
+            {user && ["admin", "secretary"].includes(user.role) && (
+              <button className="icon-btn" title="Modifica dati candidato" onClick={() => setEditMode(true)}>✏️</button>
+            )}
+          </div>
           {candidate.email && <div>{contactIcons.email} <strong>Email:</strong> {candidate.email}</div>}
           {candidate.phone && <div>{contactIcons.phone} <strong>Telefono:</strong> {candidate.phone}</div>}
           {candidate.notes && (
@@ -84,12 +88,26 @@ export default function CandidateDetailPage() {
       ) : (
         <ul className="list">
           {interviews.map(i => (
-            <li key={i.id} className="card">
-              <div style={{ marginBottom: "0.75rem" }}>
-                <strong>{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</strong>
-                <span style={{ float: "right", color: "#64748b" }}>
-                  {contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
+            <li key={i.id} className="card" style={{ position: "relative" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <div>
+                  <strong>{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</strong>
+                  <div style={{ color: "#64748b", fontSize: "0.95rem" }}>
+                    {contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+                <div>
+                  {user && ["admin", "secretary"].includes(user.role) ? (
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <button className="icon-btn" title="Modifica colloquio" onClick={() => setEditInterview(i)}>✏️</button>
+                      {i.status === "Programmato" && (
+                        <button className="btn-danger" title="Annulla colloquio" onClick={() => setCancelConfirm(i)}>Annulla</button>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }} title="Richiede permessi admin/secretary">Azioni riservate</span>
+                  )}
+                </div>
               </div>
               <div>{contactIcons.location} <strong>Luogo:</strong> {i.location || "Non specificato"}</div>
               <div>{contactIcons.status} <strong>Stato:</strong> {i.status}</div>
@@ -108,16 +126,6 @@ export default function CandidateDetailPage() {
                   <strong>{contactIcons.weaknesses} Aree di miglioramento:</strong> {i.weaknesses}
                 </div>
               )}
-              <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-                <button className="btn-secondary" onClick={() => setEditInterview(i)}>
-                  Modifica
-                </button>
-                {i.status === "Programmato" && (
-                  <button className="btn-danger" onClick={() => setCancelConfirm(i)}>
-                    Annulla
-                  </button>
-                )}
-              </div>
             </li>
           ))}
         </ul>

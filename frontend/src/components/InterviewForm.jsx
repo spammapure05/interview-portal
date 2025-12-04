@@ -70,21 +70,19 @@ export default function InterviewForm({ interview, onSaved, onCancel }) {
     }
   };
 
-  // If auth state hasn't resolved yet, show a small loader inside the modal
+  // If auth state hasn't resolved yet, show a small loader
   if (user === null || user === undefined) {
     return (
       <div className="card card-inline">
         <h2>{contactIcons.interview} Caricamento...</h2>
-        <div>Verifica permessi utente...</div>
+        <div>Caricamento modulo colloquio...</div>
       </div>
     );
   }
 
-  if (!["admin", "secretary"].includes(user.role)) return null;
-
   return (
     <div className="card card-inline">
-      <h2>{contactIcons.interview} Nuovo Colloquio</h2>
+      <h2>{contactIcons.interview} {interview ? "Modifica Colloquio" : "Nuovo Colloquio"}</h2>
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
         <label>
           <span className="input-label">Candidato *</span>

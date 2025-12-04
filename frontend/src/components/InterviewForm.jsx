@@ -70,6 +70,16 @@ export default function InterviewForm({ interview, onSaved, onCancel }) {
     }
   };
 
+  // If auth state hasn't resolved yet, show a small loader inside the modal
+  if (user === null || user === undefined) {
+    return (
+      <div className="card card-inline">
+        <h2>{contactIcons.interview} Caricamento...</h2>
+        <div>Verifica permessi utente...</div>
+      </div>
+    );
+  }
+
   if (!["admin", "secretary"].includes(user.role)) return null;
 
   return (

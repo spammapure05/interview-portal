@@ -66,7 +66,7 @@ export default function CandidateDetailPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <h2 style={{ margin: 0 }}>Informazioni Personali</h2>
             {user && ["admin", "secretary"].includes(user.role) && (
-              <button className="icon-btn" title="Modifica dati candidato" onClick={() => setEditMode(true)}>✏️</button>
+              <button type="button" className="icon-btn" title="Modifica dati candidato" onClick={() => setEditMode(true)}>✏️</button>
             )}
           </div>
           {candidate.email && <div>{contactIcons.email} <strong>Email:</strong> {candidate.email}</div>}
@@ -99,7 +99,7 @@ export default function CandidateDetailPage() {
                 <div>
                   {user && ["admin", "secretary"].includes(user.role) ? (
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                      <button className="icon-btn" title="Modifica colloquio" onClick={() => setEditInterview(i)}>✏️</button>
+                      <button type="button" className="icon-btn" title="Modifica colloquio" onClick={() => setEditInterview(i)}>✏️</button>
                       {i.status === "Programmato" && (
                         <button className="btn-danger" title="Annulla colloquio" onClick={() => setCancelConfirm(i)}>Annulla</button>
                       )}
@@ -136,11 +136,15 @@ export default function CandidateDetailPage() {
         <div className="modal-overlay">
           <div className="modal-dialog">
             <h2>Modifica Colloquio</h2>
-            <InterviewForm
-              interview={editInterview}
-              onSaved={() => { setEditInterview(null); load(); }}
-              onCancel={() => setEditInterview(null)}
-            />
+            {user ? (
+              <InterviewForm
+                interview={editInterview}
+                onSaved={() => { setEditInterview(null); load(); }}
+                onCancel={() => setEditInterview(null)}
+              />
+            ) : (
+              <div style={{ padding: "1rem 0" }}>Caricamento informazioni utente...</div>
+            )}
           </div>
         </div>
       )}

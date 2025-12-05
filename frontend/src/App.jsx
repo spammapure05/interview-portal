@@ -8,7 +8,17 @@ import CandidateDetailPage from "./pages/CandidateDetailPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  // While auth is loading, show a loading screen
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontSize: "1.2rem", color: "#475569" }}>
+        Caricamento...
+      </div>
+    );
+  }
+  
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }

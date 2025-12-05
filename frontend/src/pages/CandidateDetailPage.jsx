@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import api from "../api";
 import { contactIcons } from "../utils/icons";
 import CandidateForm from "../components/CandidateForm";
+import InterviewForm from "../components/InterviewForm";
 import { useAuth } from "../authContext";
 
 export default function CandidateDetailPage() {

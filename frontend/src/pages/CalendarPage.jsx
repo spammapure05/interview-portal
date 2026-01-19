@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useAuth } from "../authContext";
 import InterviewForm from "../components/InterviewForm";
-import { contactIcons } from "../utils/icons";
+import { Link } from "react-router-dom";
 
 export default function CalendarPage() {
   const authContext = useAuth();
@@ -10,6 +10,7 @@ export default function CalendarPage() {
   const [interviews, setInterviews] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
+  const [editInterview, setEditInterview] = useState(null);
 
   const load = async () => {
     const res = await api.get("/interviews");
@@ -42,83 +43,175 @@ export default function CalendarPage() {
 
   const displayedInterviews = filteredByTime;
 
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Programmato": return "status-scheduled";
+      case "Completato": return "status-completed";
+      case "Annullato": return "status-cancelled";
+      default: return "";
+    }
+  };
+
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-title">
-          <span className="title-icon" aria-hidden="true" />
-          <h1>Calendario Colloqui</h1>
+    <div className="page-wrapper">
+      {/* Page Header */}
+      <div className="page-header-modern">
+        <div className="page-header-content">
+          <div className="page-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h1 className="page-title-modern">Calendario Colloqui</h1>
+            <p className="page-subtitle-modern">Visualizza e pianifica i colloqui dei candidati</p>
+          </div>
         </div>
-        <p className="page-sub">Visualizza e pianifica i colloqui dei candidati.</p>
       </div>
 
-      <div className="page-container">
+      <div className="page-layout">
         {/* Sidebar - Form */}
-        <div className="page-sidebar">
+        <aside className="page-sidebar-modern">
           {user && (user.role === "secretary" || user.role === "admin") && (
             <InterviewForm onSaved={load} />
           )}
-        </div>
+        </aside>
 
-        {/* Main Content - List */}
-        <div className="page-content">
-          {/* Search + Filters Row */}
-          <div className="search-row">
-            <div className="search-bar large">
-              <span className="search-icon">🔍</span>
+        {/* Main Content */}
+        <div className="page-main">
+          {/* Search & Filters */}
+          <div className="filters-bar">
+            <div className="search-input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="search-icon-svg">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
               <input
                 type="text"
-                placeholder="Cerca per nome, data, luogo..."
+                className="search-input"
+                placeholder="Cerca per nome o luogo..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <button className="search-clear" onClick={() => setSearchTerm("")}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              )}
             </div>
 
-            <div className="filter-bar small">
+            <div className="filter-select-wrapper">
               <select
+                className="filter-select"
                 value={timeFilter}
                 onChange={e => setTimeFilter(e.target.value)}
               >
-                <option value="all">Tutti</option>
+                <option value="all">Tutti i colloqui</option>
                 <option value="upcoming">Prossimi</option>
                 <option value="past">Passati</option>
               </select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="select-arrow">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
             </div>
           </div>
 
-          <div className="results-count">
-            {displayedInterviews.length} risultato{displayedInterviews.length !== 1 ? "i" : ""}
+          {/* Results Count */}
+          <div className="results-info">
+            <span className="results-count-modern">
+              {displayedInterviews.length} colloqui{displayedInterviews.length !== 1 ? "" : "o"}
+            </span>
           </div>
 
+          {/* Interview List */}
           {displayedInterviews.length === 0 ? (
-            <div className="card empty-state">
-              <div className="empty-state-icon">📭</div>
+            <div className="empty-state-modern">
+              <div className="empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <line x1="8" y1="14" x2="8" y2="14"/>
+                  <line x1="12" y1="14" x2="12" y2="14"/>
+                  <line x1="16" y1="14" x2="16" y2="14"/>
+                </svg>
+              </div>
+              <h3>Nessun colloquio trovato</h3>
               <p>
                 {interviews.length === 0
-                  ? "Nessun colloquio programmato. Aggiungi il primo colloquio per iniziare!"
-                  : "Nessun colloquio corrisponde ai tuoi filtri."}
+                  ? "Non ci sono colloqui programmati. Inizia aggiungendo il primo!"
+                  : "Nessun colloquio corrisponde ai filtri selezionati."}
               </p>
             </div>
           ) : (
-            <div className="list-container">
+            <div className="interviews-grid">
               {displayedInterviews.map(i => (
-                <div key={i.id} className="card interview-card">
-                  <div className="interview-left">
-                    <a className="interview-name">{contactIcons.interview} <span className="name-link">{i.first_name} {i.last_name}</span></a>
-                    <div className="meta-row">
-                      <span className="meta">{contactIcons.calendar} {new Date(i.scheduled_at).toLocaleDateString()}</span>
-                      <span className="meta">{contactIcons.time} {new Date(i.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                <div key={i.id} className="interview-card-modern">
+                  <div className="interview-card-header">
+                    <div className="candidate-info">
+                      <div className="candidate-avatar">
+                        {i.first_name?.charAt(0)}{i.last_name?.charAt(0)}
+                      </div>
+                      <div className="candidate-details">
+                        <Link to={`/candidates/${i.candidate_id}`} className="candidate-name-link">
+                          {i.first_name} {i.last_name}
+                        </Link>
+                        <span className="interview-location">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          {i.location || "Luogo non specificato"}
+                        </span>
+                      </div>
                     </div>
+                    <span className={`status-badge-modern ${getStatusClass(i.status)}`}>
+                      {i.status}
+                    </span>
                   </div>
 
-                  <div className="interview-right">
-                    <div className={`status-badge status-${i.status}`}>{i.status}</div>
-                    <div className="meta-location">{contactIcons.location} {i.location || "Luogo non specificato"}</div>
+                  <div className="interview-card-body">
+                    <div className="interview-datetime">
+                      <div className="datetime-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>{new Date(i.scheduled_at).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}</span>
+                      </div>
+                      <div className="datetime-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>{new Date(i.scheduled_at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                    </div>
+
+                    {i.feedback && (
+                      <div className="interview-feedback">
+                        <strong>Feedback:</strong> {i.feedback}
+                      </div>
+                    )}
                   </div>
 
-                  {"feedback" in i && i.feedback && (
-                    <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-                      <strong>{contactIcons.feedback} Feedback:</strong> {i.feedback}
+                  {user && (user.role === "admin" || user.role === "secretary") && (
+                    <div className="interview-card-actions">
+                      <button className="btn-icon" title="Modifica" onClick={() => setEditInterview(i)}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -127,6 +220,28 @@ export default function CalendarPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editInterview && (
+        <div className="modal-overlay" onClick={() => setEditInterview(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Modifica Colloquio</h2>
+              <button className="modal-close" onClick={() => setEditInterview(null)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <InterviewForm
+              interview={editInterview}
+              onSaved={() => { setEditInterview(null); load(); }}
+              onCancel={() => setEditInterview(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

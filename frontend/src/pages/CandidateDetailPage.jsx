@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../api";
 import CandidateForm from "../components/CandidateForm";
 import InterviewForm from "../components/InterviewForm";
+import FeedbackForm from "../components/FeedbackForm";
 import { useAuth } from "../authContext";
 
 export default function CandidateDetailPage() {
@@ -10,9 +11,31 @@ export default function CandidateDetailPage() {
   const [candidate, setCandidate] = useState(null);
   const [interviews, setInterviews] = useState([]);
   const [editInterview, setEditInterview] = useState(null);
+  const [feedbackInterview, setFeedbackInterview] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [suitabilityLoading, setSuitabilityLoading] = useState(false);
   const { user } = useAuth();
+
+  const updateSuitability = async (newValue) => {
+    setSuitabilityLoading(true);
+    try {
+      await api.patch(`/candidates/${id}/suitability`, { suitability: newValue });
+      load();
+    } catch (err) {
+      console.error("Errore aggiornamento idoneità", err);
+    } finally {
+      setSuitabilityLoading(false);
+    }
+  };
+
+  const getSuitabilityClass = (suitability) => {
+    switch (suitability) {
+      case "Idoneo": return "suitability-suitable";
+      case "Non idoneo": return "suitability-not-suitable";
+      default: return "suitability-pending";
+    }
+  };
 
   const load = async () => {
     const [candRes, intRes] = await Promise.all([
@@ -93,16 +116,91 @@ export default function CandidateDetailPage() {
             </div>
           </div>
         </div>
-        {user && ["admin", "secretary"].includes(user.role) && (
-          <button className="btn-edit-profile" onClick={() => setEditMode(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-            Modifica
-          </button>
-        )}
+        <div className="profile-actions">
+          <span className={`suitability-badge ${getSuitabilityClass(candidate.suitability)}`}>
+            {candidate.suitability === "Idoneo" && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            )}
+            {candidate.suitability === "Non idoneo" && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            )}
+            {(!candidate.suitability || candidate.suitability === "Da valutare") && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            )}
+            {candidate.suitability || "Da valutare"}
+          </span>
+          {user && ["admin", "secretary"].includes(user.role) && (
+            <button className="btn-edit-profile" onClick={() => setEditMode(true)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Modifica
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Suitability Section - Admin only */}
+      {user && user.role === "admin" && (
+        <div className="suitability-card">
+          <div className="suitability-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <h2>Valutazione Candidato</h2>
+          </div>
+          <div className="suitability-options">
+            <button
+              className={`suitability-option ${candidate.suitability === "Da valutare" || !candidate.suitability ? "active" : ""} option-pending`}
+              onClick={() => updateSuitability("Da valutare")}
+              disabled={suitabilityLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Da valutare
+            </button>
+            <button
+              className={`suitability-option ${candidate.suitability === "Idoneo" ? "active" : ""} option-suitable`}
+              onClick={() => updateSuitability("Idoneo")}
+              disabled={suitabilityLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              Idoneo
+            </button>
+            <button
+              className={`suitability-option ${candidate.suitability === "Non idoneo" ? "active" : ""} option-not-suitable`}
+              onClick={() => updateSuitability("Non idoneo")}
+              disabled={suitabilityLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              Non idoneo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Notes Section */}
       {candidate.notes && (
@@ -179,6 +277,13 @@ export default function CandidateDetailPage() {
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                           </svg>
                         </button>
+                        {user.role === "admin" && (
+                          <button className="btn-icon-small btn-feedback-icon" title="Valutazione" onClick={() => setFeedbackInterview(i)}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                          </button>
+                        )}
                         {i.status === "Programmato" && (
                           <button className="btn-icon-small btn-danger-icon" title="Annulla" onClick={() => setCancelConfirm(i)}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -331,6 +436,28 @@ export default function CandidateDetailPage() {
                 Sì, annulla colloquio
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {feedbackInterview && (
+        <div className="modal-overlay" onClick={() => setFeedbackInterview(null)}>
+          <div className="modal-content modal-feedback" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Valutazione Colloquio</h2>
+              <button className="modal-close" onClick={() => setFeedbackInterview(null)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <FeedbackForm
+              interview={feedbackInterview}
+              onSaved={() => { setFeedbackInterview(null); load(); }}
+              onCancel={() => setFeedbackInterview(null)}
+            />
           </div>
         </div>
       )}

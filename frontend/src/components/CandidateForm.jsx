@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api";
+import PhoneInput from "./PhoneInput";
 
 export default function CandidateForm({ candidate, onSaved }) {
   const [firstName, setFirstName] = useState("");
@@ -136,13 +137,11 @@ export default function CandidateForm({ candidate, onSaved }) {
             </svg>
             Telefono
           </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="+39 123 456 7890"
+          <PhoneInput
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={setPhone}
             disabled={loading}
+            placeholder="123 456 7890"
           />
         </div>
 

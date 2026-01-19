@@ -6,6 +6,7 @@ import CandidateForm from "../components/CandidateForm";
 export default function CandidateListPage() {
   const [candidates, setCandidates] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [suitabilityFilter, setSuitabilityFilter] = useState("all");
 
   const load = async () => {
     const res = await api.get("/candidates");
@@ -16,18 +17,34 @@ export default function CandidateListPage() {
     load();
   }, []);
 
-  // Filtro ricerca
+  // Filtro ricerca e idoneità
   const filteredCandidates = candidates.filter(c => {
+    // Filtro testo
     const fullName = `${c.first_name} ${c.last_name}`.toLowerCase();
     const email = (c.email || "").toLowerCase();
     const phone = (c.phone || "").toLowerCase();
     const search = searchTerm.toLowerCase();
-    return (
-      fullName.includes(search) ||
+    const matchesSearch = fullName.includes(search) ||
       email.includes(search) ||
-      phone.includes(search)
-    );
+      phone.includes(search);
+
+    // Filtro idoneità
+    let matchesSuitability = true;
+    if (suitabilityFilter !== "all") {
+      const candidateSuitability = c.suitability || "Da valutare";
+      matchesSuitability = candidateSuitability === suitabilityFilter;
+    }
+
+    return matchesSearch && matchesSuitability;
   });
+
+  const getSuitabilityClass = (suitability) => {
+    switch (suitability) {
+      case "Idoneo": return "suitability-suitable";
+      case "Non idoneo": return "suitability-not-suitable";
+      default: return "suitability-pending";
+    }
+  };
 
   return (
     <div className="page-wrapper">
@@ -57,7 +74,7 @@ export default function CandidateListPage() {
 
         {/* Main Content */}
         <div className="page-main">
-          {/* Search */}
+          {/* Search & Filters */}
           <div className="filters-bar">
             <div className="search-input-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="search-icon-svg">
@@ -79,6 +96,22 @@ export default function CandidateListPage() {
                   </svg>
                 </button>
               )}
+            </div>
+
+            <div className="filter-select-wrapper">
+              <select
+                className="filter-select"
+                value={suitabilityFilter}
+                onChange={e => setSuitabilityFilter(e.target.value)}
+              >
+                <option value="all">Tutte le valutazioni</option>
+                <option value="Da valutare">Da valutare</option>
+                <option value="Idoneo">Idonei</option>
+                <option value="Non idoneo">Non idonei</option>
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="select-arrow">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
             </div>
           </div>
 
@@ -127,6 +160,26 @@ export default function CandidateListPage() {
                         </span>
                       )}
                     </div>
+                    <span className={`suitability-badge-small ${getSuitabilityClass(c.suitability)}`}>
+                      {c.suitability === "Idoneo" && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      )}
+                      {c.suitability === "Non idoneo" && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      )}
+                      {(!c.suitability || c.suitability === "Da valutare") && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="8" x2="12" y2="12"/>
+                          <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                      )}
+                    </span>
                   </div>
 
                   <div className="candidate-card-body">

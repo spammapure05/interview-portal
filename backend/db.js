@@ -39,9 +39,15 @@ db.serialize(() => {
       last_name TEXT NOT NULL,
       email TEXT,
       phone TEXT,
-      notes TEXT
+      notes TEXT,
+      suitability TEXT DEFAULT 'Da valutare' CHECK(suitability IN ('Da valutare', 'Idoneo', 'Non idoneo'))
     )
   `);
+
+  // Migration: add suitability column if not exists
+  db.run(`ALTER TABLE candidates ADD COLUMN suitability TEXT DEFAULT 'Da valutare'`, (err) => {
+    // Ignore error if column already exists
+  });
 
   // Colloqui
   db.run(`

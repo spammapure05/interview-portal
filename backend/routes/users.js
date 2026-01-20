@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import db from "../db.js";
 import { requireRole } from "../rolesMiddleware.js";
 import { logAudit } from "./audit.js";
+import { sendEmail } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -76,7 +77,7 @@ router.put("/:id", requireRole("admin"), async (req, res) => {
     return res.status(400).json({ message: "Email è obbligatoria" });
   }
 
-  if (role && !["admin", "secretary"].includes(role)) {
+  if (role && !["admin", "secretary", "viewer"].includes(role)) {
     return res.status(400).json({ message: "Ruolo non valido" });
   }
 
@@ -110,6 +111,58 @@ router.put("/:id", requireRole("admin"), async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Errore server" });
   }
+});
+
+// Invia credenziali via email
+router.post("/:id/send-credentials", requireRole("admin"), async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: "Password obbligatoria per l'invio delle credenziali" });
+  }
+
+  db.get("SELECT id, email, role FROM users WHERE id = ?", [id], async (err, user) => {
+    if (err) return res.status(500).json({ message: "Errore DB" });
+    if (!user) return res.status(404).json({ message: "Utente non trovato" });
+
+    // Traduci il ruolo per l'email
+    const roleNames = {
+      admin: "Amministratore",
+      secretary: "Segreteria",
+      viewer: "Visualizzatore"
+    };
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #3B82F6;">Credenziali di Accesso</h2>
+        <p>Ciao,</p>
+        <p>Ecco le tue credenziali per accedere al portale:</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 8px 0;"><strong>Email:</strong> ${user.email}</p>
+          <p style="margin: 8px 0;"><strong>Password:</strong> <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${password}</code></p>
+          <p style="margin: 8px 0;"><strong>Ruolo:</strong> ${roleNames[user.role] || user.role}</p>
+        </div>
+        <p style="color: #ef4444; font-size: 14px;">
+          <strong>Importante:</strong> Ti consigliamo di cambiare la password al primo accesso.
+        </p>
+        <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+          Questo messaggio e stato generato automaticamente dal sistema.
+        </p>
+      </div>
+    `;
+
+    try {
+      await sendEmail(user.email, "Credenziali di Accesso al Portale", htmlContent);
+
+      logAudit(req.user.id, req.user.email, "send_credentials", "user", parseInt(id), { email: user.email });
+
+      res.json({ sent: true, message: "Credenziali inviate con successo" });
+    } catch (error) {
+      console.error("Errore invio credenziali:", error);
+      res.status(500).json({ message: "Errore nell'invio dell'email. Verifica la configurazione SMTP." });
+    }
+  });
 });
 
 // Elimina utente

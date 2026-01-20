@@ -16,6 +16,8 @@ export default function UsersPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
+  const [sendCredentials, setSendCredentials] = useState(false);
+  const [sendingCredentials, setSendingCredentials] = useState(false);
 
   const load = async () => {
     try {
@@ -41,6 +43,7 @@ export default function UsersPage() {
     setShowForm(false);
     setShowPassword(false);
     setGeneratedPassword("");
+    setSendCredentials(false);
   };
 
   // Genera password sicura
@@ -96,6 +99,17 @@ export default function UsersPage() {
           password: password || undefined,
           role
         });
+        // Invia credenziali se richiesto e c'è una nuova password
+        if (sendCredentials && password) {
+          try {
+            await api.post(`/users/${editUser.id}/send-credentials`, { password });
+          } catch (sendErr) {
+            setError("Utente salvato, ma errore nell'invio credenziali: " + (sendErr.response?.data?.message || "Errore"));
+            setFormLoading(false);
+            load();
+            return;
+          }
+        }
       } else {
         // Create
         if (!password) {
@@ -103,7 +117,18 @@ export default function UsersPage() {
           setFormLoading(false);
           return;
         }
-        await api.post("/users", { email, password, role });
+        const res = await api.post("/users", { email, password, role });
+        // Invia credenziali se richiesto
+        if (sendCredentials && res.data?.id) {
+          try {
+            await api.post(`/users/${res.data.id}/send-credentials`, { password });
+          } catch (sendErr) {
+            setError("Utente creato, ma errore nell'invio credenziali: " + (sendErr.response?.data?.message || "Errore"));
+            setFormLoading(false);
+            load();
+            return;
+          }
+        }
       }
       resetForm();
       load();
@@ -111,6 +136,21 @@ export default function UsersPage() {
       setError(err.response?.data?.message || "Errore nel salvataggio");
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleSendCredentialsOnly = async (user) => {
+    const newPassword = prompt("Inserisci la password da inviare all'utente:");
+    if (!newPassword) return;
+
+    setSendingCredentials(user.id);
+    try {
+      await api.post(`/users/${user.id}/send-credentials`, { password: newPassword });
+      alert("Credenziali inviate con successo a " + user.email);
+    } catch (err) {
+      alert(err.response?.data?.message || "Errore nell'invio delle credenziali");
+    } finally {
+      setSendingCredentials(false);
     }
   };
 
@@ -179,6 +219,23 @@ export default function UsersPage() {
                   </span>
                 </div>
                 <div className="user-actions">
+                  <button
+                    className="btn-icon"
+                    title="Invia Credenziali"
+                    onClick={() => handleSendCredentialsOnly(user)}
+                    disabled={sendingCredentials === user.id}
+                  >
+                    {sendingCredentials === user.id ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin">
+                        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="12"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                    )}
+                  </button>
                   <button className="btn-icon" title="Modifica" onClick={() => openEditForm(user)}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -247,13 +304,11 @@ export default function UsersPage() {
                     value={password}
                     onChange={e => {
                       setPassword(e.target.value);
-                      if (e.target.value !== generatedPassword) {
-                        setGeneratedPassword("");
-                      }
+                      setGeneratedPassword("");
                     }}
                     required={!editUser}
                     disabled={formLoading}
-                    placeholder={editUser ? "••••••••" : ""}
+                    placeholder={editUser ? "••••••••" : "Inserisci password o usa Genera"}
                   />
                   <button
                     type="button"
@@ -328,6 +383,23 @@ export default function UsersPage() {
                   <option value="viewer">Visualizzatore</option>
                   <option value="admin">Amministratore</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={sendCredentials}
+                    onChange={e => setSendCredentials(e.target.checked)}
+                    disabled={formLoading || (editUser && !password)}
+                  />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="checkbox-icon">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  Invia credenziali via email
+                  {editUser && !password && <span className="hint-text"> (inserisci una nuova password)</span>}
+                </label>
               </div>
 
               <div className="form-actions-row">

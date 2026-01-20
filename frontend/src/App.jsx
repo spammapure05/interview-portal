@@ -7,6 +7,11 @@ import CandidateListPage from "./pages/CandidateListPage";
 import CandidateDetailPage from "./pages/CandidateDetailPage";
 import StatsPage from "./pages/StatsPage";
 import UsersPage from "./pages/UsersPage";
+import RoomsPage from "./pages/RoomsPage";
+import RoomCalendarPage from "./pages/RoomCalendarPage";
+import VehiclesPage from "./pages/VehiclesPage";
+import VehicleCalendarPage from "./pages/VehicleCalendarPage";
+import GlobalCalendarPage from "./pages/GlobalCalendarPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
@@ -44,6 +49,11 @@ export default function App() {
         <Route path="candidates/:id" element={<CandidateDetailPage />} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="rooms" element={<RoomsPage />} />
+        <Route path="room-calendar" element={<RoomCalendarPage />} />
+        <Route path="vehicles" element={<VehiclesPage />} />
+        <Route path="vehicle-calendar" element={<VehicleCalendarPage />} />
+        <Route path="global-calendar" element={<GlobalCalendarPage />} />
       </Route>
     </Routes>
   );

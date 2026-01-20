@@ -102,6 +102,75 @@ db.serialize(() => {
   // Migration: add created_at to candidates
   db.run(`ALTER TABLE candidates ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`, (err) => {});
   db.run(`ALTER TABLE candidates ADD COLUMN updated_at TEXT`, (err) => {});
+
+  // Sale meeting
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rooms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      capacity INTEGER,
+      description TEXT,
+      color TEXT DEFAULT '#3B82F6',
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Riunioni nelle sale
+  db.run(`
+    CREATE TABLE IF NOT EXISTS room_meetings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      room_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT NOT NULL,
+      organizer TEXT,
+      participants TEXT,
+      created_by INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(room_id) REFERENCES rooms(id),
+      FOREIGN KEY(created_by) REFERENCES users(id)
+    )
+  `);
+
+  // Veicoli aziendali
+  db.run(`
+    CREATE TABLE IF NOT EXISTS vehicles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plate TEXT NOT NULL UNIQUE,
+      brand TEXT NOT NULL,
+      model TEXT NOT NULL,
+      fuel_type TEXT,
+      current_km INTEGER DEFAULT 0,
+      notes TEXT,
+      color TEXT DEFAULT '#3B82F6',
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Prenotazioni veicoli
+  db.run(`
+    CREATE TABLE IF NOT EXISTS vehicle_bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehicle_id INTEGER NOT NULL,
+      driver_name TEXT NOT NULL,
+      destination TEXT,
+      purpose TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT,
+      km_start INTEGER,
+      km_end INTEGER,
+      returned INTEGER DEFAULT 0,
+      return_notes TEXT,
+      notes TEXT,
+      created_by INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(vehicle_id) REFERENCES vehicles(id),
+      FOREIGN KEY(created_by) REFERENCES users(id)
+    )
+  `);
 });
 
 export default db;

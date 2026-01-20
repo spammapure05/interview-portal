@@ -14,6 +14,10 @@ import documentsRoutes from "./routes/documents.js";
 import auditRoutes from "./routes/audit.js";
 import statsRoutes from "./routes/stats.js";
 import usersRoutes from "./routes/users.js";
+import roomsRoutes from "./routes/rooms.js";
+import roomMeetingsRoutes from "./routes/roomMeetings.js";
+import vehiclesRoutes from "./routes/vehicles.js";
+import vehicleBookingsRoutes from "./routes/vehicleBookings.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -81,6 +85,10 @@ app.use("/api/documents", documentsRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/rooms", roomsRoutes);
+app.use("/api/room-meetings", roomMeetingsRoutes);
+app.use("/api/vehicles", vehiclesRoutes);
+app.use("/api/vehicle-bookings", vehicleBookingsRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");

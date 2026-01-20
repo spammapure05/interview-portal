@@ -4,6 +4,7 @@ import api from "../api";
 import CandidateForm from "../components/CandidateForm";
 import InterviewForm from "../components/InterviewForm";
 import FeedbackForm from "../components/FeedbackForm";
+import DocumentsSection from "../components/DocumentsSection";
 import { useAuth } from "../authContext";
 
 export default function CandidateDetailPage() {
@@ -217,6 +218,13 @@ export default function CandidateDetailPage() {
           <p className="detail-card-content">{candidate.notes}</p>
         </div>
       )}
+
+      {/* Documents Section */}
+      <DocumentsSection
+        candidateId={id}
+        canEdit={user && ["admin", "secretary"].includes(user.role)}
+        canDelete={user && user.role === "admin"}
+      />
 
       {/* Interviews Section */}
       <div className="detail-section">

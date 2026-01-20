@@ -67,6 +67,41 @@ db.serialize(() => {
       FOREIGN KEY(updated_by) REFERENCES users(id)
     )
   `);
+
+  // Documenti candidati
+  db.run(`
+    CREATE TABLE IF NOT EXISTS documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      candidate_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT,
+      size INTEGER,
+      uploaded_by INTEGER,
+      uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(candidate_id) REFERENCES candidates(id),
+      FOREIGN KEY(uploaded_by) REFERENCES users(id)
+    )
+  `);
+
+  // Audit log
+  db.run(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      user_email TEXT,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER,
+      details TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `);
+
+  // Migration: add created_at to candidates
+  db.run(`ALTER TABLE candidates ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`, (err) => {});
+  db.run(`ALTER TABLE candidates ADD COLUMN updated_at TEXT`, (err) => {});
 });
 
 export default db;

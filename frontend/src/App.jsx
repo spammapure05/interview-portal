@@ -5,6 +5,8 @@ import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
 import CandidateListPage from "./pages/CandidateListPage";
 import CandidateDetailPage from "./pages/CandidateDetailPage";
+import StatsPage from "./pages/StatsPage";
+import UsersPage from "./pages/UsersPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
@@ -40,6 +42,8 @@ export default function App() {
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="candidates" element={<CandidateListPage />} />
         <Route path="candidates/:id" element={<CandidateDetailPage />} />
+        <Route path="stats" element={<StatsPage />} />
+        <Route path="users" element={<UsersPage />} />
       </Route>
     </Routes>
   );

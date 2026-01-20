@@ -8,6 +8,10 @@ import { authMiddleware } from "./authMiddleware.js";
 import authRoutes from "./routes/auth.js";
 import candidatesRoutes from "./routes/candidates.js";
 import interviewsRoutes from "./routes/interviews.js";
+import documentsRoutes from "./routes/documents.js";
+import auditRoutes from "./routes/audit.js";
+import statsRoutes from "./routes/stats.js";
+import usersRoutes from "./routes/users.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,6 +32,10 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 app.use("/api/candidates", candidatesRoutes);
 app.use("/api/interviews", interviewsRoutes);
+app.use("/api/documents", documentsRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/users", usersRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");

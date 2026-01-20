@@ -8072,7 +8072,7 @@ button:disabled {
 
 .global-search-input {
   width: 280px;
-  padding: 0.6rem 0.75rem 0.6rem 2.5rem;
+  padding: 0.6rem 0.75rem 0.6rem 2.75rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 0.9rem;
@@ -8965,34 +8965,73 @@ button:disabled {
   transform: none;
 }
 
+.password-mode-toggle {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+}
+
 .generated-password-box {
   margin-top: 0.75rem;
   padding: 1rem;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 10px;
+}
+
+.generated-password-header {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .generated-label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-secondary);
+}
+
+.btn-regenerate {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-regenerate svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-regenerate:hover {
+  background: var(--bg-lighter);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.generated-password-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .generated-value {
   flex: 1;
   font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #059669;
   background: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  min-width: 200px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
 }
 
 .btn-copy {
@@ -9008,8 +9047,8 @@ button:disabled {
 }
 
 .btn-copy svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   color: var(--text-secondary);
 }
 
@@ -9023,8 +9062,7 @@ button:disabled {
 }
 
 .password-hint {
-  width: 100%;
-  margin: 0.5rem 0 0;
+  margin: 0.75rem 0 0;
   font-size: 0.8rem;
   color: var(--text-muted);
   font-style: italic;

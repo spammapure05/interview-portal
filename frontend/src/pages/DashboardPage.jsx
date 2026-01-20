@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="stats-grid">
-        <div className="stat-card stat-candidates">
+        <Link to="/candidates" className="stat-card stat-card-link stat-candidates">
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -81,9 +81,12 @@ export default function DashboardPage() {
             <span className="stat-value">{loading ? "..." : stats.candidates}</span>
             <span className="stat-label">Candidati</span>
           </div>
-        </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </Link>
 
-        <div className="stat-card stat-interviews">
+        <Link to="/calendar" className="stat-card stat-card-link stat-interviews">
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -96,9 +99,12 @@ export default function DashboardPage() {
             <span className="stat-value">{loading ? "..." : stats.interviews}</span>
             <span className="stat-label">Colloqui totali</span>
           </div>
-        </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </Link>
 
-        <div className="stat-card stat-upcoming">
+        <Link to="/calendar?filter=upcoming" className="stat-card stat-card-link stat-upcoming">
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
@@ -109,7 +115,10 @@ export default function DashboardPage() {
             <span className="stat-value">{loading ? "..." : stats.upcoming}</span>
             <span className="stat-label">Prossimi colloqui</span>
           </div>
-        </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </Link>
       </div>
 
       {/* Quick Actions */}
@@ -177,7 +186,7 @@ export default function DashboardPage() {
           </h2>
           <div className="recent-list">
             {recentInterviews.map(interview => (
-              <div key={interview.id} className="recent-item">
+              <Link to={`/candidates/${interview.candidate_id}`} key={interview.id} className="recent-item recent-item-link">
                 <div className="recent-avatar">
                   {interview.first_name?.charAt(0)}{interview.last_name?.charAt(0)}
                 </div>
@@ -192,10 +201,15 @@ export default function DashboardPage() {
                     })}
                   </span>
                 </div>
-                <span className={`status-pill status-${interview.status}`}>
-                  {interview.status}
-                </span>
-              </div>
+                <div className="recent-right">
+                  <span className={`status-pill status-${interview.status}`}>
+                    {interview.status}
+                  </span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="recent-arrow">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </Link>
             ))}
           </div>
         </div>

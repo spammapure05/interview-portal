@@ -3,14 +3,20 @@ import api from "../api";
 import { useAuth } from "../authContext";
 import InterviewForm from "../components/InterviewForm";
 import FeedbackForm from "../components/FeedbackForm";
-import { Link } from "react-router-dom";
+import CalendarView from "../components/CalendarView";
+import { Link, useSearchParams } from "react-router-dom";
 
 export default function CalendarPage() {
   const authContext = useAuth();
   const user = authContext?.user;
+  const [searchParams] = useSearchParams();
   const [interviews, setInterviews] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("list"); // "list" or "calendar"
+  const [timeFilter, setTimeFilter] = useState(() => {
+    const filterParam = searchParams.get("filter");
+    return filterParam === "upcoming" ? "upcoming" : "all";
+  });
   const [editInterview, setEditInterview] = useState(null);
   const [feedbackInterview, setFeedbackInterview] = useState(null);
 
@@ -124,15 +130,50 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* Results Count */}
-          <div className="results-info">
+          {/* Results Count & View Toggle */}
+          <div className="results-info results-info-with-toggle">
             <span className="results-count-modern">
               {displayedInterviews.length} colloqui{displayedInterviews.length !== 1 ? "" : "o"}
             </span>
+            <div className="view-toggle">
+              <button
+                className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+                title="Vista lista"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === "calendar" ? "active" : ""}`}
+                onClick={() => setViewMode("calendar")}
+                title="Vista calendario"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Interview List */}
-          {displayedInterviews.length === 0 ? (
+          {/* Calendar View */}
+          {viewMode === "calendar" ? (
+            <CalendarView
+              interviews={interviews}
+              onEditInterview={setEditInterview}
+              onFeedbackInterview={setFeedbackInterview}
+              user={user}
+            />
+          ) : displayedInterviews.length === 0 ? (
             <div className="empty-state-modern">
               <div className="empty-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../authContext";
 
@@ -5,6 +6,8 @@ export default function Layout() {
   const { user, logout, showTimeoutWarning, timeRemaining, extendSession } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -14,6 +17,30 @@ export default function Layout() {
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
+  };
+
+  const isDropdownActive = (paths) => {
+    return paths.some(path => location.pathname.startsWith(path));
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setOpenDropdown(null);
+  }, [location.pathname]);
+
+  const toggleDropdown = (name) => {
+    setOpenDropdown(openDropdown === name ? null : name);
   };
 
   return (
@@ -30,7 +57,8 @@ export default function Layout() {
             <span className="logo">Interview Portal</span>
           </Link>
           {user && (
-            <nav className="main-nav">
+            <nav className="main-nav" ref={dropdownRef}>
+              {/* Dashboard - sempre visibile */}
               <Link to="/" className={`nav-link ${isActive("/") && location.pathname === "/" ? "active" : ""}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -38,93 +66,179 @@ export default function Layout() {
                 </svg>
                 <span>Dashboard</span>
               </Link>
-              <Link to="/calendar" className={`nav-link ${isActive("/calendar") ? "active" : ""}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span>Calendario</span>
-              </Link>
-              {(user.role === "admin" || user.role === "secretary") && (
-                <Link to="/candidates" className={`nav-link ${isActive("/candidates") ? "active" : ""}`}>
+
+              {/* Dropdown Colloqui */}
+              <div className={`nav-dropdown ${isDropdownActive(["/calendar", "/candidates"]) ? "has-active" : ""}`}>
+                <button
+                  className={`nav-link dropdown-toggle ${openDropdown === "colloqui" ? "open" : ""}`}
+                  onClick={() => toggleDropdown("colloqui")}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
-                  <span>Candidati</span>
-                </Link>
-              )}
-              {user.role === "admin" && (
-                <Link to="/stats" className={`nav-link ${isActive("/stats") ? "active" : ""}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="20" x2="18" y2="10"/>
-                    <line x1="12" y1="20" x2="12" y2="4"/>
-                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  <span>Colloqui</span>
+                  <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                  <span>Statistiche</span>
-                </Link>
-              )}
-              {user.role === "admin" && (
-                <Link to="/users" className={`nav-link ${isActive("/users") ? "active" : ""}`}>
+                </button>
+                {openDropdown === "colloqui" && (
+                  <div className="dropdown-menu">
+                    <Link to="/calendar" className={`dropdown-item ${isActive("/calendar") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Calendario Colloqui
+                    </Link>
+                    {(user.role === "admin" || user.role === "secretary") && (
+                      <Link to="/candidates" className={`dropdown-item ${isActive("/candidates") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        Anagrafica Candidati
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Dropdown Sale Meeting */}
+              <div className={`nav-dropdown ${isDropdownActive(["/room-calendar", "/rooms"]) ? "has-active" : ""}`}>
+                <button
+                  className={`nav-link dropdown-toggle ${openDropdown === "sale" ? "open" : ""}`}
+                  onClick={() => toggleDropdown("sale")}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
                   </svg>
-                  <span>Utenti</span>
-                </Link>
-              )}
-              <Link to="/room-calendar" className={`nav-link ${isActive("/room-calendar") ? "active" : ""}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                <span>Sale Meeting</span>
-              </Link>
-              {user.role === "admin" && (
-                <Link to="/rooms" className={`nav-link ${isActive("/rooms") ? "active" : ""}`}>
+                  <span>Sale</span>
+                  <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {openDropdown === "sale" && (
+                  <div className="dropdown-menu">
+                    <Link to="/room-calendar" className={`dropdown-item ${isActive("/room-calendar") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Prenota Sale
+                    </Link>
+                    {user.role === "admin" && (
+                      <Link to="/rooms" className={`dropdown-item ${isActive("/rooms") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="3" width="7" height="7"/>
+                          <rect x="14" y="3" width="7" height="7"/>
+                          <rect x="14" y="14" width="7" height="7"/>
+                          <rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                        Gestione Sale
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Dropdown Veicoli */}
+              <div className={`nav-dropdown ${isDropdownActive(["/vehicle-calendar", "/vehicles"]) ? "has-active" : ""}`}>
+                <button
+                  className={`nav-link dropdown-toggle ${openDropdown === "veicoli" ? "open" : ""}`}
+                  onClick={() => toggleDropdown("veicoli")}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="7"/>
-                    <rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/>
-                    <rect x="3" y="14" width="7" height="7"/>
+                    <path d="M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                    <path d="M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                    <path d="M5 17H3v-4m0 0L5 7h10l2 4m-14 2h14m0 0v4h-2m2-4h3l-2-4h-1"/>
                   </svg>
-                  <span>Gestione Sale</span>
-                </Link>
-              )}
-              <Link to="/vehicle-calendar" className={`nav-link ${isActive("/vehicle-calendar") ? "active" : ""}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
-                  <path d="M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
-                  <path d="M5 17H3v-4m0 0L5 7h10l2 4m-14 2h14m0 0v4h-2m2-4h3l-2-4h-1"/>
-                </svg>
-                <span>Veicoli</span>
-              </Link>
+                  <span>Veicoli</span>
+                  <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {openDropdown === "veicoli" && (
+                  <div className="dropdown-menu">
+                    <Link to="/vehicle-calendar" className={`dropdown-item ${isActive("/vehicle-calendar") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Prenota Veicoli
+                    </Link>
+                    {user.role === "admin" && (
+                      <Link to="/vehicles" className={`dropdown-item ${isActive("/vehicles") && !isActive("/vehicle-calendar") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="3"/>
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                        </svg>
+                        Gestione Veicoli
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Admin Section */}
               {user.role === "admin" && (
-                <Link to="/vehicles" className={`nav-link ${isActive("/vehicles") && !isActive("/vehicle-calendar") ? "active" : ""}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
-                  </svg>
-                  <span>Gestione Veicoli</span>
-                </Link>
-              )}
-              {user.role === "admin" && (
-                <Link to="/global-calendar" className={`nav-link ${isActive("/global-calendar") ? "active" : ""}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                    <circle cx="8" cy="14" r="1"/>
-                    <circle cx="12" cy="14" r="1"/>
-                    <circle cx="16" cy="14" r="1"/>
-                  </svg>
-                  <span>Calendario Globale</span>
-                </Link>
+                <div className={`nav-dropdown ${isDropdownActive(["/stats", "/users", "/global-calendar"]) ? "has-active" : ""}`}>
+                  <button
+                    className={`nav-link dropdown-toggle ${openDropdown === "admin" ? "open" : ""}`}
+                    onClick={() => toggleDropdown("admin")}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                    </svg>
+                    <span>Admin</span>
+                    <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </button>
+                  {openDropdown === "admin" && (
+                    <div className="dropdown-menu">
+                      <Link to="/global-calendar" className={`dropdown-item ${isActive("/global-calendar") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                          <circle cx="8" cy="14" r="1"/>
+                          <circle cx="12" cy="14" r="1"/>
+                          <circle cx="16" cy="14" r="1"/>
+                        </svg>
+                        Calendario Globale
+                      </Link>
+                      <Link to="/stats" className={`dropdown-item ${isActive("/stats") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="20" x2="18" y2="10"/>
+                          <line x1="12" y1="20" x2="12" y2="4"/>
+                          <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        Statistiche
+                      </Link>
+                      <Link to="/users" className={`dropdown-item ${isActive("/users") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Gestione Utenti
+                      </Link>
+                    </div>
+                  )}
+                </div>
               )}
             </nav>
           )}

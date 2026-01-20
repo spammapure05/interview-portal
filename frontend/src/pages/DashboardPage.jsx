@@ -14,53 +14,83 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [candRes, intRes, meetingsRes, vehiclesRes] = await Promise.all([
-          api.get("/candidates"),
-          api.get("/interviews"),
-          api.get("/room-meetings"),
-          api.get("/vehicle-bookings")
-        ]);
-
-        // L'API candidates restituisce { data: [...], total: N }
-        const candidates = candRes.data.data || candRes.data;
-        const candidatesCount = candRes.data.total || candidates.length;
-
-        const interviews = intRes.data;
         const now = new Date();
         const tenDaysFromNow = new Date();
         tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
 
-        const upcoming = interviews.filter(i => new Date(i.scheduled_at) > now);
-        const recent = interviews
-          .sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at))
-          .slice(0, 5);
+        // I viewer non vedono candidati/colloqui, quindi non li carichiamo
+        if (user.role === "viewer") {
+          const [meetingsRes, vehiclesRes] = await Promise.all([
+            api.get("/room-meetings"),
+            api.get("/vehicle-bookings")
+          ]);
 
-        // Filter meetings in next 10 days
-        const meetings = meetingsRes.data
-          .filter(m => {
-            const meetingDate = new Date(m.start_time);
-            return meetingDate >= now && meetingDate <= tenDaysFromNow;
-          })
-          .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
-          .slice(0, 5);
+          // Filter meetings in next 10 days
+          const meetings = meetingsRes.data
+            .filter(m => {
+              const meetingDate = new Date(m.start_time);
+              return meetingDate >= now && meetingDate <= tenDaysFromNow;
+            })
+            .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+            .slice(0, 5);
 
-        // Filter vehicle bookings in next 10 days
-        const vehicles = vehiclesRes.data
-          .filter(v => {
-            const bookingDate = new Date(v.start_time);
-            return bookingDate >= now && bookingDate <= tenDaysFromNow && !v.returned;
-          })
-          .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
-          .slice(0, 5);
+          // Filter vehicle bookings in next 10 days
+          const vehicles = vehiclesRes.data
+            .filter(v => {
+              const bookingDate = new Date(v.start_time);
+              return bookingDate >= now && bookingDate <= tenDaysFromNow && !v.returned;
+            })
+            .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+            .slice(0, 5);
 
-        setStats({
-          candidates: candidatesCount,
-          interviews: interviews.length,
-          upcoming: upcoming.length
-        });
-        setRecentInterviews(recent);
-        setUpcomingMeetings(meetings);
-        setUpcomingVehicles(vehicles);
+          setUpcomingMeetings(meetings);
+          setUpcomingVehicles(vehicles);
+        } else {
+          const [candRes, intRes, meetingsRes, vehiclesRes] = await Promise.all([
+            api.get("/candidates"),
+            api.get("/interviews"),
+            api.get("/room-meetings"),
+            api.get("/vehicle-bookings")
+          ]);
+
+          // L'API candidates restituisce { data: [...], total: N }
+          const candidates = candRes.data.data || candRes.data;
+          const candidatesCount = candRes.data.total || candidates.length;
+
+          const interviews = intRes.data;
+
+          const upcoming = interviews.filter(i => new Date(i.scheduled_at) > now);
+          const recent = interviews
+            .sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at))
+            .slice(0, 5);
+
+          // Filter meetings in next 10 days
+          const meetings = meetingsRes.data
+            .filter(m => {
+              const meetingDate = new Date(m.start_time);
+              return meetingDate >= now && meetingDate <= tenDaysFromNow;
+            })
+            .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+            .slice(0, 5);
+
+          // Filter vehicle bookings in next 10 days
+          const vehicles = vehiclesRes.data
+            .filter(v => {
+              const bookingDate = new Date(v.start_time);
+              return bookingDate >= now && bookingDate <= tenDaysFromNow && !v.returned;
+            })
+            .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+            .slice(0, 5);
+
+          setStats({
+            candidates: candidatesCount,
+            interviews: interviews.length,
+            upcoming: upcoming.length
+          });
+          setRecentInterviews(recent);
+          setUpcomingMeetings(meetings);
+          setUpcomingVehicles(vehicles);
+        }
       } catch (err) {
         console.error("Errore caricamento stats", err);
       } finally {
@@ -68,7 +98,7 @@ export default function DashboardPage() {
       }
     };
     loadStats();
-  }, []);
+  }, [user.role]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -88,82 +118,41 @@ export default function DashboardPage() {
           <p className="hero-subtitle">
             {user.role === "admin"
               ? "Panoramica completa di candidati, colloqui e valutazioni."
+              : user.role === "viewer"
+              ? "Gestisci prenotazioni di sale e veicoli aziendali."
               : "Gestisci candidati e organizza i colloqui efficacemente."}
           </p>
         </div>
         <div className="hero-badge">
           <span className={`role-badge role-${user.role}`}>
-            {user.role === "admin" ? "Amministratore" : "Segreteria"}
+            {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
           </span>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <Link to="/candidates" className="stat-card stat-card-link stat-candidates">
-          <div className="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      {/* Stats Cards - Nascosti per i viewer */}
+      {user.role !== "viewer" && (
+        <div className="stats-grid">
+          <Link to="/candidates" className="stat-card stat-card-link stat-candidates">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <span className="stat-value">{loading ? "..." : stats.candidates}</span>
+              <span className="stat-label">Candidati</span>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+              <polyline points="9 18 15 12 9 6"/>
             </svg>
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{loading ? "..." : stats.candidates}</span>
-            <span className="stat-label">Candidati</span>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </Link>
+          </Link>
 
-        <Link to="/calendar" className="stat-card stat-card-link stat-interviews">
-          <div className="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{loading ? "..." : stats.interviews}</span>
-            <span className="stat-label">Colloqui totali</span>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </Link>
-
-        <Link to="/calendar?filter=upcoming" className="stat-card stat-card-link stat-upcoming">
-          <div className="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div className="stat-content">
-            <span className="stat-value">{loading ? "..." : stats.upcoming}</span>
-            <span className="stat-label">Prossimi colloqui</span>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </Link>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="dashboard-section">
-        <h2 className="section-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          Azioni rapide
-        </h2>
-        <div className="actions-grid">
-          <Link to="/calendar" className="action-card action-calendar">
-            <div className="action-icon">
+          <Link to="/calendar" className="stat-card stat-card-link stat-interviews">
+            <div className="stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -171,43 +160,90 @@ export default function DashboardPage() {
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
             </div>
-            <div className="action-content">
-              <h3>Calendario Colloqui</h3>
-              <p>Visualizza e pianifica tutti i colloqui programmati</p>
+            <div className="stat-content">
+              <span className="stat-value">{loading ? "..." : stats.interviews}</span>
+              <span className="stat-label">Colloqui totali</span>
             </div>
-            <div className="action-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
           </Link>
 
-          <Link to="/candidates" className="action-card action-candidates">
-            <div className="action-icon">
+          <Link to="/calendar?filter=upcoming" className="stat-card stat-card-link stat-upcoming">
+            <div className="stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
               </svg>
             </div>
-            <div className="action-content">
-              <h3>Gestisci Candidati</h3>
-              <p>Aggiungi nuovi profili e gestisci i candidati esistenti</p>
+            <div className="stat-content">
+              <span className="stat-value">{loading ? "..." : stats.upcoming}</span>
+              <span className="stat-label">Prossimi colloqui</span>
             </div>
-            <div className="action-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="stat-arrow">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
           </Link>
         </div>
-      </div>
+      )}
 
-      {/* Recent Interviews */}
-      {recentInterviews.length > 0 && (
+      {/* Quick Actions - Nascosti per i viewer */}
+      {user.role !== "viewer" && (
+        <div className="dashboard-section">
+          <h2 className="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Azioni rapide
+          </h2>
+          <div className="actions-grid">
+            <Link to="/calendar" className="action-card action-calendar">
+              <div className="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <div className="action-content">
+                <h3>Calendario Colloqui</h3>
+                <p>Visualizza e pianifica tutti i colloqui programmati</p>
+              </div>
+              <div className="action-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </Link>
+
+            <Link to="/candidates" className="action-card action-candidates">
+              <div className="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="8.5" cy="7" r="4"/>
+                  <line x1="20" y1="8" x2="20" y2="14"/>
+                  <line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+              </div>
+              <div className="action-content">
+                <h3>Gestisci Candidati</h3>
+                <p>Aggiungi nuovi profili e gestisci i candidati esistenti</p>
+              </div>
+              <div className="action-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Interviews - Nascosti per i viewer */}
+      {user.role !== "viewer" && recentInterviews.length > 0 && (
         <div className="dashboard-section">
           <h2 className="section-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

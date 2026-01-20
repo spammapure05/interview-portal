@@ -368,13 +368,15 @@ export default function RoomCalendarPage() {
                   <span className="detail-count">
                     {selectedMeetings.length} riunion{selectedMeetings.length !== 1 ? "i" : "e"}
                   </span>
-                  <button className="btn-add-meeting" onClick={() => openNewMeeting(selectedDay)}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="12" y1="5" x2="12" y2="19"/>
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Aggiungi
-                  </button>
+                  {user && user.role !== "viewer" && (
+                    <button className="btn-add-meeting" onClick={() => openNewMeeting(selectedDay)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      Aggiungi
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -394,25 +396,37 @@ export default function RoomCalendarPage() {
                         {new Date(meeting.end_time).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
                       </div>
                       <div className="detail-item-info">
-                        <div className="detail-item-header">
-                          <span className="detail-item-name">{meeting.title}</span>
-                          <span className="meeting-room-badge" style={{ backgroundColor: getRoomColor(meeting.room_id) }}>
-                            {meeting.room_name}
-                          </span>
-                        </div>
-                        {meeting.organizer && (
-                          <span className="detail-item-location">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                              <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            {meeting.organizer}
-                          </span>
-                        )}
-                        {meeting.description && (
-                          <div className="detail-item-feedback">
-                            {meeting.description}
+                        {/* Viewer vede solo nome sala */}
+                        {user?.role === "viewer" ? (
+                          <div className="detail-item-header">
+                            <span className="detail-item-name viewer-minimal">Sala prenotata</span>
+                            <span className="meeting-room-badge" style={{ backgroundColor: getRoomColor(meeting.room_id) }}>
+                              {meeting.room_name}
+                            </span>
                           </div>
+                        ) : (
+                          <>
+                            <div className="detail-item-header">
+                              <span className="detail-item-name">{meeting.title}</span>
+                              <span className="meeting-room-badge" style={{ backgroundColor: getRoomColor(meeting.room_id) }}>
+                                {meeting.room_name}
+                              </span>
+                            </div>
+                            {meeting.organizer && (
+                              <span className="detail-item-location">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                  <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                {meeting.organizer}
+                              </span>
+                            )}
+                            {meeting.description && (
+                              <div className="detail-item-feedback">
+                                {meeting.description}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                       {user && user.role !== "viewer" && (

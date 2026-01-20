@@ -435,13 +435,15 @@ export default function VehicleCalendarPage() {
                   <span className="detail-count">
                     {selectedBookings.length} prenotazion{selectedBookings.length !== 1 ? "i" : "e"}
                   </span>
-                  <button className="btn-add-meeting" onClick={() => openNewBooking(selectedDay)}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="12" y1="5" x2="12" y2="19"/>
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Aggiungi
-                  </button>
+                  {user && user.role !== "viewer" && (
+                    <button className="btn-add-meeting" onClick={() => openNewBooking(selectedDay)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      Aggiungi
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -465,46 +467,65 @@ export default function VehicleCalendarPage() {
                         )}
                       </div>
                       <div className="detail-item-info">
-                        <div className="detail-item-header">
-                          <span className="detail-item-name">{booking.driver_name}</span>
-                          <span className="meeting-room-badge" style={{ backgroundColor: getVehicleColor(booking.vehicle_id) }}>
-                            {booking.plate}
-                          </span>
-                          {booking.returned ? (
-                            <span className="booking-status-badge returned">Restituito</span>
-                          ) : (
-                            <span className="booking-status-badge active">In uso</span>
-                          )}
-                        </div>
-                        {booking.destination && (
-                          <span className="detail-item-location">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                              <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            {booking.destination}
-                          </span>
-                        )}
-                        {booking.purpose && (
-                          <div className="booking-purpose">{booking.purpose}</div>
-                        )}
-                        {(booking.km_start || booking.km_end) && (
-                          <div className="booking-km">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10"/>
-                              <path d="M12 6v6l4 2"/>
-                            </svg>
-                            {booking.km_start && <span>Partenza: {booking.km_start.toLocaleString()} km</span>}
-                            {booking.km_end && <span> | Rientro: {booking.km_end.toLocaleString()} km</span>}
+                        {/* Viewer vede solo marca, modello e targa */}
+                        {user?.role === "viewer" ? (
+                          <div className="detail-item-header">
+                            <span className="detail-item-name viewer-minimal">
+                              {booking.brand} {booking.model}
+                            </span>
+                            <span className="meeting-room-badge" style={{ backgroundColor: getVehicleColor(booking.vehicle_id) }}>
+                              {booking.plate}
+                            </span>
+                            {booking.returned ? (
+                              <span className="booking-status-badge returned">Restituito</span>
+                            ) : (
+                              <span className="booking-status-badge active">In uso</span>
+                            )}
                           </div>
-                        )}
-                        {booking.notes && (
-                          <div className="detail-item-feedback">{booking.notes}</div>
-                        )}
-                        {booking.return_notes && (
-                          <div className="detail-item-feedback return-note">
-                            <strong>Note rientro:</strong> {booking.return_notes}
-                          </div>
+                        ) : (
+                          <>
+                            <div className="detail-item-header">
+                              <span className="detail-item-name">{booking.driver_name}</span>
+                              <span className="meeting-room-badge" style={{ backgroundColor: getVehicleColor(booking.vehicle_id) }}>
+                                {booking.plate}
+                              </span>
+                              {booking.returned ? (
+                                <span className="booking-status-badge returned">Restituito</span>
+                              ) : (
+                                <span className="booking-status-badge active">In uso</span>
+                              )}
+                            </div>
+                            {booking.destination && (
+                              <span className="detail-item-location">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                  <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {booking.destination}
+                              </span>
+                            )}
+                            {booking.purpose && (
+                              <div className="booking-purpose">{booking.purpose}</div>
+                            )}
+                            {(booking.km_start || booking.km_end) && (
+                              <div className="booking-km">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10"/>
+                                  <path d="M12 6v6l4 2"/>
+                                </svg>
+                                {booking.km_start && <span>Partenza: {booking.km_start.toLocaleString()} km</span>}
+                                {booking.km_end && <span> | Rientro: {booking.km_end.toLocaleString()} km</span>}
+                              </div>
+                            )}
+                            {booking.notes && (
+                              <div className="detail-item-feedback">{booking.notes}</div>
+                            )}
+                            {booking.return_notes && (
+                              <div className="detail-item-feedback return-note">
+                                <strong>Note rientro:</strong> {booking.return_notes}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                       {user && user.role !== "viewer" && (

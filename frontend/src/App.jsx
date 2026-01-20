@@ -20,7 +20,7 @@ import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
   const { user, isLoading } = useAuth();
-  
+
   // While auth is loading, show a loading screen
   if (isLoading) {
     return (
@@ -29,8 +29,15 @@ function PrivateRoute({ children }) {
       </div>
     );
   }
-  
+
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+// Protegge le rotte dai viewer (per colloqui/candidati)
+function NoViewerRoute({ children }) {
+  const { user } = useAuth();
+  if (user?.role === "viewer") return <Navigate to="/" replace />;
   return children;
 }
 
@@ -48,9 +55,9 @@ export default function App() {
         }
       >
         <Route index element={<DashboardPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
-        <Route path="candidates" element={<CandidateListPage />} />
-        <Route path="candidates/:id" element={<CandidateDetailPage />} />
+        <Route path="calendar" element={<NoViewerRoute><CalendarPage /></NoViewerRoute>} />
+        <Route path="candidates" element={<NoViewerRoute><CandidateListPage /></NoViewerRoute>} />
+        <Route path="candidates/:id" element={<NoViewerRoute><CandidateDetailPage /></NoViewerRoute>} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="rooms" element={<RoomsPage />} />

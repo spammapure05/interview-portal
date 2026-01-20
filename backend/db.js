@@ -223,18 +223,61 @@ db.serialize(() => {
     )
   `);
 
-  // Migration: add viewer role
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users_new (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('admin', 'secretary', 'viewer')),
-      permissions TEXT DEFAULT '{}',
-      active INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `, (err) => {});
+  // Migration: add viewer role - Check if migration needed
+  db.get("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'", (err, row) => {
+    if (err) return;
+
+    // Check if the current users table has the viewer role in CHECK constraint
+    if (row && row.sql && !row.sql.includes("'viewer'")) {
+      console.log("Migrating users table to support viewer role...");
+
+      // Create new table with viewer role
+      db.run(`
+        CREATE TABLE IF NOT EXISTS users_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('admin', 'secretary', 'viewer')),
+          permissions TEXT DEFAULT '{}',
+          active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `, (err) => {
+        if (err) {
+          console.error("Error creating users_new:", err);
+          return;
+        }
+
+        // Copy data from old table
+        db.run(`
+          INSERT OR IGNORE INTO users_new (id, email, password_hash, role)
+          SELECT id, email, password_hash, role FROM users
+        `, (err) => {
+          if (err) {
+            console.error("Error copying users data:", err);
+            return;
+          }
+
+          // Drop old table
+          db.run(`DROP TABLE IF EXISTS users`, (err) => {
+            if (err) {
+              console.error("Error dropping old users table:", err);
+              return;
+            }
+
+            // Rename new table
+            db.run(`ALTER TABLE users_new RENAME TO users`, (err) => {
+              if (err) {
+                console.error("Error renaming users_new:", err);
+                return;
+              }
+              console.log("Users table migration completed successfully!");
+            });
+          });
+        });
+      });
+    }
+  });
 
   // Migration: add category to documents
   db.run(`ALTER TABLE documents ADD COLUMN category TEXT DEFAULT 'other'`, (err) => {});

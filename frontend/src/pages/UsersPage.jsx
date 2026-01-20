@@ -14,6 +14,8 @@ export default function UsersPage() {
   const [role, setRole] = useState("secretary");
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState("");
 
   const load = async () => {
     try {
@@ -37,6 +39,37 @@ export default function UsersPage() {
     setError("");
     setEditUser(null);
     setShowForm(false);
+    setShowPassword(false);
+    setGeneratedPassword("");
+  };
+
+  // Genera password sicura
+  const generatePassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";
+    let newPassword = "";
+
+    // Assicura almeno una maiuscola, una minuscola, un numero e un carattere speciale
+    newPassword += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+    newPassword += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)];
+    newPassword += "0123456789"[Math.floor(Math.random() * 10)];
+    newPassword += "!@#$%&*"[Math.floor(Math.random() * 7)];
+
+    // Completa con caratteri casuali
+    for (let i = 4; i < length; i++) {
+      newPassword += charset[Math.floor(Math.random() * charset.length)];
+    }
+
+    // Mescola la password
+    newPassword = newPassword.split("").sort(() => Math.random() - 0.5).join("");
+
+    setPassword(newPassword);
+    setGeneratedPassword(newPassword);
+    setShowPassword(true);
+  };
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText(generatedPassword);
   };
 
   const openEditForm = (user) => {
@@ -46,6 +79,8 @@ export default function UsersPage() {
     setRole(user.role);
     setError("");
     setShowForm(true);
+    setShowPassword(false);
+    setGeneratedPassword("");
   };
 
   const handleSubmit = async (e) => {
@@ -205,15 +240,72 @@ export default function UsersPage() {
                   </svg>
                   Password {editUser ? "(lascia vuoto per non modificare)" : "*"}
                 </label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required={!editUser}
-                  disabled={formLoading}
-                  placeholder={editUser ? "••••••••" : ""}
-                />
+                <div className="password-input-group">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-input"
+                    value={password}
+                    onChange={e => {
+                      setPassword(e.target.value);
+                      if (e.target.value !== generatedPassword) {
+                        setGeneratedPassword("");
+                      }
+                    }}
+                    required={!editUser}
+                    disabled={formLoading}
+                    placeholder={editUser ? "••••••••" : ""}
+                  />
+                  <button
+                    type="button"
+                    className="btn-icon password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Nascondi password" : "Mostra password"}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                  {!editUser && (
+                    <button
+                      type="button"
+                      className="btn-generate-password"
+                      onClick={generatePassword}
+                      disabled={formLoading}
+                      title="Genera password automatica"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                      </svg>
+                      Genera
+                    </button>
+                  )}
+                </div>
+                {generatedPassword && (
+                  <div className="generated-password-box">
+                    <span className="generated-label">Password generata:</span>
+                    <code className="generated-value">{generatedPassword}</code>
+                    <button
+                      type="button"
+                      className="btn-copy"
+                      onClick={copyPassword}
+                      title="Copia negli appunti"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                    </button>
+                    <p className="password-hint">Copia questa password prima di salvare. Non sara piu visibile.</p>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">

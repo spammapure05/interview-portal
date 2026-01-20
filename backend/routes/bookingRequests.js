@@ -5,7 +5,7 @@ import { requireRole } from "../rolesMiddleware.js";
 const router = express.Router();
 
 // Helper per inviare notifiche email
-async function sendNotificationEmail(templateType, recipientEmail, recipientName, variables) {
+async function sendNotificationEmail(templateType, recipientEmail, recipientName, variables, ccEmail = null) {
   return new Promise((resolve, reject) => {
     // Get SMTP config
     db.get("SELECT * FROM smtp_config WHERE id = 1 AND enabled = 1", async (err, smtpConfig) => {
@@ -44,14 +44,21 @@ async function sendNotificationEmail(templateType, recipientEmail, recipientName
             body = body.replace(regex, value || '');
           }
 
-          await transporter.sendMail({
+          const mailOptions = {
             from: `"${smtpConfig.from_name}" <${smtpConfig.from_email}>`,
             to: recipientEmail,
             subject: subject,
             html: body
-          });
+          };
 
-          console.log(`Email sent to ${recipientEmail} for ${templateType}`);
+          // Aggiungi CC se specificato
+          if (ccEmail) {
+            mailOptions.cc = ccEmail;
+          }
+
+          await transporter.sendMail(mailOptions);
+
+          console.log(`Email sent to ${recipientEmail}${ccEmail ? ` (CC: ${ccEmail})` : ''} for ${templateType}`);
           resolve(true);
         } catch (error) {
           console.error("Email send error:", error);
@@ -60,6 +67,44 @@ async function sendNotificationEmail(templateType, recipientEmail, recipientName
       });
     });
   });
+}
+
+// Helper per ottenere tutti gli admin e segreteria
+function getAdminAndSecretaryEmails() {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT email, role FROM users WHERE role IN ('admin', 'secretary') AND active = 1", (err, rows) => {
+      if (err) {
+        console.error("Error getting admin/secretary emails:", err);
+        return resolve({ admins: [], secretaries: [] });
+      }
+      const admins = rows.filter(r => r.role === 'admin').map(r => r.email);
+      const secretaries = rows.filter(r => r.role === 'secretary').map(r => r.email);
+      resolve({ admins, secretaries });
+    });
+  });
+}
+
+// Helper per inviare notifica a tutti admin e segreteria
+async function notifyAllStaff(templateType, variables, requesterEmailAsCC = null) {
+  const { admins, secretaries } = await getAdminAndSecretaryEmails();
+  const allStaff = [...admins, ...secretaries];
+
+  for (const email of allStaff) {
+    await sendNotificationEmail(templateType, email, "Staff", variables, requesterEmailAsCC);
+  }
+}
+
+// Helper per inviare notifica al richiedente e alle segreterie
+async function notifyRequesterAndSecretaries(templateType, requesterEmail, requesterName, variables) {
+  const { secretaries } = await getAdminAndSecretaryEmails();
+
+  // Email al richiedente
+  await sendNotificationEmail(templateType, requesterEmail, requesterName, variables);
+
+  // Email a tutte le segreterie
+  for (const secEmail of secretaries) {
+    await sendNotificationEmail(templateType, secEmail, "Segreteria", variables);
+  }
 }
 
 // GET - Conteggio richieste pending (per badge admin) - DEVE ESSERE PRIMA DI /:id
@@ -199,22 +244,16 @@ router.post("/", (req, res) => {
 
       const requestId = this.lastID;
 
-      // Notifica admin via email
-      db.all("SELECT email FROM users WHERE role = 'admin'", async (err, admins) => {
-        if (!err && admins) {
-          const startDate = new Date(requested_start);
-          for (const admin of admins) {
-            await sendNotificationEmail("request_submitted", admin.email, "Admin", {
-              requester_name: req.user.email,
-              request_type: request_type === "room" ? "Sala riunioni" : "Veicolo",
-              date: startDate.toLocaleDateString("it-IT"),
-              start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
-              end_time: requested_end ? new Date(requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
-              details: request_type === "room" ? `Titolo: ${meeting_title || "N/A"}` : `Destinazione: ${destination || "N/A"}`
-            });
-          }
-        }
-      });
+      // Notifica tutti admin + segreteria con CC al richiedente
+      const startDate = new Date(requested_start);
+      await notifyAllStaff("request_submitted", {
+        requester_name: req.user.email,
+        request_type: request_type === "room" ? "Sala riunioni" : "Veicolo",
+        date: startDate.toLocaleDateString("it-IT"),
+        start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+        end_time: requested_end ? new Date(requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
+        details: request_type === "room" ? `Titolo: ${meeting_title || "N/A"}` : `Destinazione: ${destination || "N/A"}`
+      }, req.user.email); // CC al richiedente
 
       res.status(201).json({
         message: "Richiesta inviata con successo",
@@ -264,14 +303,15 @@ router.put("/:id/approve", requireRole("admin"), (req, res) => {
           );
         }
 
-        // Notifica richiedente
+        // Notifica richiedente + segreterie
         const startDate = new Date(request.requested_start);
-        await sendNotificationEmail("request_approved", request.requester_email, request.requester_name, {
+        await notifyRequesterAndSecretaries("request_approved", request.requester_email, request.requester_name, {
           request_type: request.request_type === "room" ? "Sala riunioni" : "Veicolo",
           date: startDate.toLocaleDateString("it-IT"),
           start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
           end_time: request.requested_end ? new Date(request.requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
-          details: request.request_type === "room" ? `Sala: ${request.meeting_title || "N/A"}` : `Veicolo per: ${request.destination || "N/A"}`
+          details: request.request_type === "room" ? `Sala: ${request.meeting_title || "N/A"}` : `Veicolo per: ${request.destination || "N/A"}`,
+          requester_name: request.requester_name || request.requester_email
         });
 
         res.json({ message: "Richiesta approvata" });
@@ -307,12 +347,13 @@ router.put("/:id/reject", requireRole("admin"), (req, res) => {
       async function(err) {
         if (err) return res.status(500).json({ message: "Errore rifiuto" });
 
-        // Notifica richiedente
+        // Notifica richiedente + segreterie
         const startDate = new Date(request.requested_start);
-        await sendNotificationEmail("request_rejected", request.requester_email, request.requester_name, {
+        await notifyRequesterAndSecretaries("request_rejected", request.requester_email, request.requester_name, {
           request_type: request.request_type === "room" ? "Sala riunioni" : "Veicolo",
           date: startDate.toLocaleDateString("it-IT"),
-          rejection_reason: rejection_reason
+          rejection_reason: rejection_reason,
+          requester_name: request.requester_name || request.requester_email
         });
 
         res.json({ message: "Richiesta rifiutata" });
@@ -369,14 +410,15 @@ router.put("/:id/counter", requireRole("admin"), (req, res) => {
       async function(err) {
         if (err) return res.status(500).json({ message: "Errore controproposta" });
 
-        // Notifica richiedente
+        // Notifica richiedente + segreterie
         const origDate = new Date(request.requested_start);
         const counterDate = counter_start ? new Date(counter_start) : origDate;
 
-        await sendNotificationEmail("request_counter", request.requester_email, request.requester_name, {
+        await notifyRequesterAndSecretaries("request_counter", request.requester_email, request.requester_name, {
           original_details: `${origDate.toLocaleDateString("it-IT")} alle ${origDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`,
           counter_details: `${counterDate.toLocaleDateString("it-IT")} alle ${counterDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`,
-          counter_reason: counter_reason
+          counter_reason: counter_reason,
+          requester_name: request.requester_name || request.requester_email
         });
 
         res.json({ message: "Controproposta inviata" });
@@ -403,7 +445,7 @@ router.put("/:id/accept-counter", (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [req.params.id],
-      function(err) {
+      async function(err) {
         if (err) return res.status(500).json({ message: "Errore accettazione" });
 
         // Crea la prenotazione con i dati della controproposta
@@ -423,6 +465,17 @@ router.put("/:id/accept-counter", (req, res) => {
              request.destination, request.purpose, request.counter_start, request.counter_end, request.admin_id]
           );
         }
+
+        // Notifica admin e segreteria che la controproposta è stata accettata
+        const counterDate = new Date(request.counter_start);
+        await notifyAllStaff("request_approved", {
+          requester_name: request.requester_email,
+          request_type: request.request_type === "room" ? "Sala riunioni" : "Veicolo",
+          date: counterDate.toLocaleDateString("it-IT"),
+          start_time: counterDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+          end_time: request.counter_end ? new Date(request.counter_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
+          details: `Controproposta accettata - ${request.request_type === "room" ? `Titolo: ${request.meeting_title || "N/A"}` : `Destinazione: ${request.destination || "N/A"}`}`
+        }, null);
 
         res.json({ message: "Controproposta accettata" });
       }
@@ -448,8 +501,18 @@ router.put("/:id/reject-counter", (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [req.params.id],
-      function(err) {
+      async function(err) {
         if (err) return res.status(500).json({ message: "Errore rifiuto" });
+
+        // Notifica admin e segreteria che la controproposta è stata rifiutata
+        const origDate = new Date(request.requested_start);
+        await notifyAllStaff("request_rejected", {
+          requester_name: request.requester_email,
+          request_type: request.request_type === "room" ? "Sala riunioni" : "Veicolo",
+          date: origDate.toLocaleDateString("it-IT"),
+          rejection_reason: `La controproposta è stata rifiutata dall'utente. La richiesta originale era per ${origDate.toLocaleDateString("it-IT")} alle ${origDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}.`
+        }, null);
+
         res.json({ message: "Controproposta rifiutata" });
       }
     );

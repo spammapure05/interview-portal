@@ -288,6 +288,12 @@ db.serialize(() => {
   // Migration: add notification_email to room_meetings
   db.run(`ALTER TABLE room_meetings ADD COLUMN notification_email TEXT`, (err) => {});
 
+  // Migration: add external_email to room_meetings (for booking on behalf of external users)
+  db.run(`ALTER TABLE room_meetings ADD COLUMN external_email TEXT`, (err) => {});
+
+  // Migration: add external_email to vehicle_bookings (for booking on behalf of external users)
+  db.run(`ALTER TABLE vehicle_bookings ADD COLUMN external_email TEXT`, (err) => {});
+
   // Insert default notification templates
   db.run(`
     INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)

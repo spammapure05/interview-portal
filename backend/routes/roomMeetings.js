@@ -1,6 +1,7 @@
 import express from "express";
 import db from "../db.js";
 import { logAudit } from "./audit.js";
+import { sendEmail, getTemplate, processTemplate } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -185,9 +186,44 @@ router.post("/check-availability", async (req, res) => {
   }
 });
 
+// Funzione helper per inviare email a destinatario esterno
+async function sendExternalBookingEmail(meeting, room, type = "room") {
+  if (!meeting.external_email) return;
+
+  try {
+    const startDate = new Date(meeting.start_time);
+    const endDate = new Date(meeting.end_time);
+
+    const subject = `Prenotazione Sala: ${meeting.title} - ${room.name}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #3B82F6;">Prenotazione Sala Confermata</h2>
+        <p>Ti informiamo che è stata effettuata una prenotazione a tuo nome.</p>
+
+        <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1e293b;">${meeting.title}</h3>
+          <p><strong>Sala:</strong> ${room.name}</p>
+          <p><strong>Data:</strong> ${startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+          <p><strong>Orario:</strong> ${startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })} - ${endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>
+          ${meeting.organizer ? `<p><strong>Organizzatore:</strong> ${meeting.organizer}</p>` : ""}
+          ${meeting.description ? `<p><strong>Note:</strong> ${meeting.description}</p>` : ""}
+        </div>
+
+        <p style="color: #64748b; font-size: 14px;">Questa prenotazione è stata effettuata dalla segreteria/amministrazione.</p>
+        <p style="color: #64748b; font-size: 14px;">Cordiali saluti,<br>Interview Portal</p>
+      </div>
+    `;
+
+    await sendEmail(meeting.external_email, subject, html);
+    console.log(`Email inviata a ${meeting.external_email} per prenotazione sala`);
+  } catch (error) {
+    console.error("Errore invio email prenotazione esterna:", error);
+  }
+}
+
 // Crea nuova riunione
 router.post("/", async (req, res) => {
-  const { room_id, title, description, start_time, end_time, organizer, participants } = req.body;
+  const { room_id, title, description, start_time, end_time, organizer, participants, external_email } = req.body;
 
   if (!room_id || !title || !start_time || !end_time) {
     return res.status(400).json({ message: "Sala, titolo, ora inizio e ora fine sono obbligatori" });
@@ -196,6 +232,11 @@ router.post("/", async (req, res) => {
   // Valida che end_time sia dopo start_time
   if (new Date(end_time) <= new Date(start_time)) {
     return res.status(400).json({ message: "L'ora di fine deve essere successiva all'ora di inizio" });
+  }
+
+  // Valida formato email se specificata
+  if (external_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(external_email)) {
+    return res.status(400).json({ message: "Formato email non valido" });
   }
 
   try {
@@ -209,13 +250,14 @@ router.post("/", async (req, res) => {
     }
 
     db.run(
-      `INSERT INTO room_meetings (room_id, title, description, start_time, end_time, organizer, participants, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [room_id, title, description || null, start_time, end_time, organizer || null, participants || null, req.user.id],
+      `INSERT INTO room_meetings (room_id, title, description, start_time, end_time, organizer, participants, external_email, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [room_id, title, description || null, start_time, end_time, organizer || null, participants || null, external_email || null, req.user.id],
       function (err) {
         if (err) return res.status(500).json({ message: "Errore DB" });
 
-        logAudit(req.user.id, req.user.email, "create", "room_meeting", this.lastID, { room_id, title, start_time, end_time });
+        const meetingId = this.lastID;
+        logAudit(req.user.id, req.user.email, "create", "room_meeting", meetingId, { room_id, title, start_time, end_time, external_email });
 
         // Recupera i dati della riunione creata con info sala
         db.get(
@@ -223,9 +265,16 @@ router.post("/", async (req, res) => {
            FROM room_meetings rm
            JOIN rooms r ON rm.room_id = r.id
            WHERE rm.id = ?`,
-          [this.lastID],
-          (err, row) => {
+          [meetingId],
+          async (err, row) => {
             if (err) return res.status(500).json({ message: "Errore DB" });
+
+            // Se c'è un'email esterna, invia notifica
+            if (external_email && row) {
+              const room = { name: row.room_name, color: row.room_color };
+              await sendExternalBookingEmail(row, room);
+            }
+
             res.status(201).json(row);
           }
         );
@@ -239,7 +288,7 @@ router.post("/", async (req, res) => {
 // Modifica riunione
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { room_id, title, description, start_time, end_time, organizer, participants } = req.body;
+  const { room_id, title, description, start_time, end_time, organizer, participants, external_email } = req.body;
 
   if (!room_id || !title || !start_time || !end_time) {
     return res.status(400).json({ message: "Sala, titolo, ora inizio e ora fine sono obbligatori" });
@@ -248,6 +297,11 @@ router.put("/:id", async (req, res) => {
   // Valida che end_time sia dopo start_time
   if (new Date(end_time) <= new Date(start_time)) {
     return res.status(400).json({ message: "L'ora di fine deve essere successiva all'ora di inizio" });
+  }
+
+  // Valida formato email se specificata
+  if (external_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(external_email)) {
+    return res.status(400).json({ message: "Formato email non valido" });
   }
 
   try {
@@ -262,16 +316,16 @@ router.put("/:id", async (req, res) => {
 
     db.run(
       `UPDATE room_meetings
-       SET room_id = ?, title = ?, description = ?, start_time = ?, end_time = ?, organizer = ?, participants = ?
+       SET room_id = ?, title = ?, description = ?, start_time = ?, end_time = ?, organizer = ?, participants = ?, external_email = ?
        WHERE id = ?`,
-      [room_id, title, description || null, start_time, end_time, organizer || null, participants || null, id],
+      [room_id, title, description || null, start_time, end_time, organizer || null, participants || null, external_email || null, id],
       function (err) {
         if (err) return res.status(500).json({ message: "Errore DB" });
         if (this.changes === 0) {
           return res.status(404).json({ message: "Riunione non trovata" });
         }
 
-        logAudit(req.user.id, req.user.email, "update", "room_meeting", parseInt(id), { room_id, title, start_time, end_time });
+        logAudit(req.user.id, req.user.email, "update", "room_meeting", parseInt(id), { room_id, title, start_time, end_time, external_email });
 
         res.json({ updated: true });
       }

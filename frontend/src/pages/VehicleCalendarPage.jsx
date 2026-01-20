@@ -36,6 +36,7 @@ export default function VehicleCalendarPage() {
   const [formEndTime, setFormEndTime] = useState("");
   const [formKmStart, setFormKmStart] = useState("");
   const [formNotes, setFormNotes] = useState("");
+  const [formExternalEmail, setFormExternalEmail] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -122,6 +123,7 @@ export default function VehicleCalendarPage() {
     setFormEndTime("");
     setFormKmStart("");
     setFormNotes("");
+    setFormExternalEmail("");
     setFormError("");
     setEditBooking(null);
     setShowForm(false);
@@ -165,6 +167,7 @@ export default function VehicleCalendarPage() {
 
     setFormKmStart(booking.km_start || "");
     setFormNotes(booking.notes || "");
+    setFormExternalEmail(booking.external_email || "");
     setFormError("");
     setShowForm(true);
   };
@@ -198,7 +201,8 @@ export default function VehicleCalendarPage() {
       start_time: startTime,
       end_time: endTime,
       km_start: formKmStart ? parseInt(formKmStart) : null,
-      notes: formNotes || null
+      notes: formNotes || null,
+      external_email: formExternalEmail || null
     };
 
     try {
@@ -768,6 +772,27 @@ export default function VehicleCalendarPage() {
                     disabled={formLoading}
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  Email destinatario esterno
+                </label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={formExternalEmail}
+                  onChange={e => setFormExternalEmail(e.target.value)}
+                  disabled={formLoading}
+                  placeholder="Es. persona@azienda.it (per utenti senza account)"
+                />
+                <small className="form-hint">
+                  Inserisci un'email per prenotare per conto di personale senza account. Riceverà una notifica della prenotazione.
+                </small>
               </div>
 
               <div className="form-group">

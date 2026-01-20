@@ -2954,6 +2954,33 @@ button:disabled {
   transform: translateX(4px);
 }
 
+/* Varianti colore action-card */
+.action-card.action-rooms .action-icon {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+}
+
+.action-card.action-rooms .action-icon svg {
+  color: #10B981;
+}
+
+.action-card.action-rooms:hover {
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.action-card.action-vehicles .action-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+}
+
+.action-card.action-vehicles .action-icon svg {
+  color: #F59E0B;
+}
+
+.action-card.action-vehicles:hover {
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
 .recent-list {
   display: flex;
   flex-direction: column;
@@ -7610,6 +7637,14 @@ button:disabled {
   font-size: 0.85rem;
   line-height: 1.5;
   resize: vertical;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .form-group-small {

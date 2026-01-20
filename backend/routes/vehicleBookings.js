@@ -1,8 +1,47 @@
 import express from "express";
 import db from "../db.js";
 import { logAudit } from "./audit.js";
+import { sendEmail } from "../services/emailService.js";
 
 const router = express.Router();
+
+// Funzione helper per inviare email a destinatario esterno per prenotazione veicolo
+async function sendExternalVehicleBookingEmail(booking, vehicle) {
+  if (!booking.external_email) return;
+
+  try {
+    const startDate = new Date(booking.start_time);
+    const endDate = booking.end_time ? new Date(booking.end_time) : null;
+
+    const subject = `Prenotazione Veicolo: ${vehicle.brand} ${vehicle.model} (${vehicle.plate})`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #F59E0B;">Prenotazione Veicolo Confermata</h2>
+        <p>Ti informiamo che è stata effettuata una prenotazione veicolo a tuo nome.</p>
+
+        <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1e293b;">${vehicle.brand} ${vehicle.model}</h3>
+          <p><strong>Targa:</strong> ${vehicle.plate}</p>
+          <p><strong>Conducente:</strong> ${booking.driver_name}</p>
+          <p><strong>Data partenza:</strong> ${startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+          <p><strong>Ora partenza:</strong> ${startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>
+          ${endDate ? `<p><strong>Rientro previsto:</strong> ${endDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} alle ${endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>` : ""}
+          ${booking.destination ? `<p><strong>Destinazione:</strong> ${booking.destination}</p>` : ""}
+          ${booking.purpose ? `<p><strong>Motivo:</strong> ${booking.purpose}</p>` : ""}
+          ${booking.km_start ? `<p><strong>Km alla partenza:</strong> ${booking.km_start.toLocaleString()} km</p>` : ""}
+        </div>
+
+        <p style="color: #64748b; font-size: 14px;">Questa prenotazione è stata effettuata dalla segreteria/amministrazione.</p>
+        <p style="color: #64748b; font-size: 14px;">Cordiali saluti,<br>Interview Portal</p>
+      </div>
+    `;
+
+    await sendEmail(booking.external_email, subject, html);
+    console.log(`Email inviata a ${booking.external_email} per prenotazione veicolo`);
+  } catch (error) {
+    console.error("Errore invio email prenotazione veicolo esterna:", error);
+  }
+}
 
 // Lista prenotazioni con filtri opzionali
 router.get("/", (req, res) => {
@@ -135,7 +174,7 @@ router.post("/check-availability", async (req, res) => {
 
 // Crea nuova prenotazione
 router.post("/", async (req, res) => {
-  const { vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes } = req.body;
+  const { vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes, external_email } = req.body;
 
   if (!vehicle_id || !driver_name || !start_time) {
     return res.status(400).json({ message: "Veicolo, conducente e data partenza sono obbligatori" });
@@ -144,6 +183,11 @@ router.post("/", async (req, res) => {
   // Valida che end_time sia dopo start_time se specificato
   if (end_time && new Date(end_time) <= new Date(start_time)) {
     return res.status(400).json({ message: "La data di rientro deve essere successiva alla partenza" });
+  }
+
+  // Valida formato email se specificata
+  if (external_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(external_email)) {
+    return res.status(400).json({ message: "Formato email non valido" });
   }
 
   try {
@@ -158,8 +202,8 @@ router.post("/", async (req, res) => {
 
     db.run(
       `INSERT INTO vehicle_bookings
-       (vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes, external_email, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         vehicle_id,
         driver_name,
@@ -169,15 +213,18 @@ router.post("/", async (req, res) => {
         end_time || null,
         km_start || null,
         notes || null,
+        external_email || null,
         req.user.id
       ],
       function (err) {
         if (err) return res.status(500).json({ message: "Errore DB" });
 
-        logAudit(req.user.id, req.user.email, "create", "vehicle_booking", this.lastID, {
+        const bookingId = this.lastID;
+        logAudit(req.user.id, req.user.email, "create", "vehicle_booking", bookingId, {
           vehicle_id,
           driver_name,
-          start_time
+          start_time,
+          external_email
         });
 
         // Recupera i dati della prenotazione creata
@@ -186,9 +233,16 @@ router.post("/", async (req, res) => {
            FROM vehicle_bookings vb
            JOIN vehicles v ON vb.vehicle_id = v.id
            WHERE vb.id = ?`,
-          [this.lastID],
-          (err, row) => {
+          [bookingId],
+          async (err, row) => {
             if (err) return res.status(500).json({ message: "Errore DB" });
+
+            // Se c'è un'email esterna, invia notifica
+            if (external_email && row) {
+              const vehicle = { plate: row.plate, brand: row.brand, model: row.model };
+              await sendExternalVehicleBookingEmail(row, vehicle);
+            }
+
             res.status(201).json(row);
           }
         );
@@ -202,7 +256,7 @@ router.post("/", async (req, res) => {
 // Modifica prenotazione
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes } = req.body;
+  const { vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes, external_email } = req.body;
 
   if (!vehicle_id || !driver_name || !start_time) {
     return res.status(400).json({ message: "Veicolo, conducente e data partenza sono obbligatori" });
@@ -211,6 +265,11 @@ router.put("/:id", async (req, res) => {
   // Valida che end_time sia dopo start_time se specificato
   if (end_time && new Date(end_time) <= new Date(start_time)) {
     return res.status(400).json({ message: "La data di rientro deve essere successiva alla partenza" });
+  }
+
+  // Valida formato email se specificata
+  if (external_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(external_email)) {
+    return res.status(400).json({ message: "Formato email non valido" });
   }
 
   try {
@@ -226,7 +285,7 @@ router.put("/:id", async (req, res) => {
     db.run(
       `UPDATE vehicle_bookings
        SET vehicle_id = ?, driver_name = ?, destination = ?, purpose = ?,
-           start_time = ?, end_time = ?, km_start = ?, notes = ?
+           start_time = ?, end_time = ?, km_start = ?, notes = ?, external_email = ?
        WHERE id = ?`,
       [
         vehicle_id,
@@ -237,6 +296,7 @@ router.put("/:id", async (req, res) => {
         end_time || null,
         km_start || null,
         notes || null,
+        external_email || null,
         id
       ],
       function (err) {
@@ -248,7 +308,8 @@ router.put("/:id", async (req, res) => {
         logAudit(req.user.id, req.user.email, "update", "vehicle_booking", parseInt(id), {
           vehicle_id,
           driver_name,
-          start_time
+          start_time,
+          external_email
         });
 
         res.json({ updated: true });

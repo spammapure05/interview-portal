@@ -238,6 +238,45 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </Link>
+
+            <Link to="/room-calendar" className="action-card action-rooms">
+              <div className="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              </div>
+              <div className="action-content">
+                <h3>Prenota Sala</h3>
+                <p>Prenota una sala meeting per le tue riunioni</p>
+              </div>
+              <div className="action-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </Link>
+
+            <Link to="/vehicle-calendar" className="action-card action-vehicles">
+              <div className="action-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                  <path d="M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                  <path d="M5 17H3v-4m0 0L5 7h10l2 4m-14 2h14m0 0v4h-2m2-4h3l-2-4h-1"/>
+                </svg>
+              </div>
+              <div className="action-content">
+                <h3>Prenota Veicolo</h3>
+                <p>Prenota un veicolo aziendale per le trasferte</p>
+              </div>
+              <div className="action-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </Link>
           </div>
         </div>
       )}
@@ -298,7 +337,9 @@ export default function DashboardPage() {
           {upcomingMeetings.length === 0 ? (
             <div className="empty-section">
               <p>Nessuna riunione nei prossimi 10 giorni</p>
-              <Link to="/room-calendar" className="empty-action">Prenota sala</Link>
+              {user.role !== "viewer" && (
+                <Link to="/room-calendar" className="empty-action">Prenota sala</Link>
+              )}
             </div>
           ) : (
             <div className="recent-list">
@@ -311,7 +352,10 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div className="recent-info">
-                    <span className="recent-name">{meeting.title}</span>
+                    {/* Viewer vede solo "Sala prenotata" */}
+                    <span className="recent-name">
+                      {user.role === "viewer" ? "Sala prenotata" : meeting.title}
+                    </span>
                     <span className="recent-date">
                       {new Date(meeting.start_time).toLocaleDateString("it-IT", {
                         weekday: "short",
@@ -350,7 +394,9 @@ export default function DashboardPage() {
           {upcomingVehicles.length === 0 ? (
             <div className="empty-section">
               <p>Nessuna prenotazione veicolo nei prossimi 10 giorni</p>
-              <Link to="/vehicle-calendar" className="empty-action">Prenota veicolo</Link>
+              {user.role !== "viewer" && (
+                <Link to="/vehicle-calendar" className="empty-action">Prenota veicolo</Link>
+              )}
             </div>
           ) : (
             <div className="recent-list">
@@ -364,7 +410,10 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div className="recent-info">
-                    <span className="recent-name">{booking.driver_name}</span>
+                    {/* Viewer vede solo marca e modello */}
+                    <span className="recent-name">
+                      {user.role === "viewer" ? `${booking.brand} ${booking.model}` : booking.driver_name}
+                    </span>
                     <span className="recent-date">
                       {new Date(booking.start_time).toLocaleDateString("it-IT", {
                         weekday: "short",
@@ -373,7 +422,7 @@ export default function DashboardPage() {
                         hour: "2-digit",
                         minute: "2-digit"
                       })}
-                      {booking.destination && ` - ${booking.destination}`}
+                      {user.role !== "viewer" && booking.destination && ` - ${booking.destination}`}
                     </span>
                   </div>
                   <div className="recent-right">

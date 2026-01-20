@@ -21,8 +21,12 @@ export default function CalendarPage() {
   const [feedbackInterview, setFeedbackInterview] = useState(null);
 
   const load = async () => {
-    const res = await api.get("/interviews");
-    setInterviews(res.data);
+    try {
+      const res = await api.get("/interviews");
+      setInterviews(res.data);
+    } catch (err) {
+      console.error("Errore caricamento colloqui", err);
+    }
   };
 
   useEffect(() => {

@@ -9,8 +9,13 @@ export default function CandidateListPage() {
   const [suitabilityFilter, setSuitabilityFilter] = useState("all");
 
   const load = async () => {
-    const res = await api.get("/candidates");
-    setCandidates(res.data);
+    try {
+      const res = await api.get("/candidates");
+      // L'API restituisce { data: [...], total: N } per la paginazione
+      setCandidates(res.data.data || res.data);
+    } catch (err) {
+      console.error("Errore caricamento candidati", err);
+    }
   };
 
   useEffect(() => {

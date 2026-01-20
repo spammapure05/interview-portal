@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      // Check if session has expired
+      // Check if session has expired (only if lastActivity exists)
       const lastActivity = localStorage.getItem("lastActivity");
       if (lastActivity) {
         const elapsed = Date.now() - parseInt(lastActivity);
@@ -101,6 +101,9 @@ export function AuthProvider({ children }) {
           setIsLoading(false);
           return;
         }
+      } else {
+        // Se non esiste lastActivity, lo inizializziamo ora (sessioni legacy)
+        localStorage.setItem("lastActivity", Date.now().toString());
       }
       fetchMe();
     } else {

@@ -17,15 +17,20 @@ export default function DashboardPage() {
           api.get("/interviews")
         ]);
 
+        // L'API candidates restituisce { data: [...], total: N }
+        const candidates = candRes.data.data || candRes.data;
+        const candidatesCount = candRes.data.total || candidates.length;
+
+        const interviews = intRes.data;
         const now = new Date();
-        const upcoming = intRes.data.filter(i => new Date(i.scheduled_at) > now);
-        const recent = intRes.data
+        const upcoming = interviews.filter(i => new Date(i.scheduled_at) > now);
+        const recent = interviews
           .sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at))
           .slice(0, 5);
 
         setStats({
-          candidates: candRes.data.length,
-          interviews: intRes.data.length,
+          candidates: candidatesCount,
+          interviews: interviews.length,
           upcoming: upcoming.length
         });
         setRecentInterviews(recent);

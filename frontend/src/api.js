@@ -16,7 +16,10 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response,
   error => {
-    if (error.response?.status === 401) {
+    // Non fare redirect per /auth/me - viene gestito dall'authContext
+    const isAuthMeRequest = error.config?.url === "/auth/me";
+
+    if (error.response?.status === 401 && !isAuthMeRequest) {
       // Token non valido, rimuovi e ricarica
       localStorage.removeItem("token");
       localStorage.removeItem("lastActivity");

@@ -1,11 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../api";
 
+const CATEGORIES = {
+  cv: { label: "CV", color: "#8B5CF6" },
+  cover_letter: { label: "Lettera Motivazionale", color: "#3B82F6" },
+  certificate: { label: "Certificato", color: "#10B981" },
+  id_document: { label: "Documento Identità", color: "#F59E0B" },
+  other: { label: "Altro", color: "#6B7280" }
+};
+
 export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("cv");
+  const [filterCategory, setFilterCategory] = useState("all");
   const fileInputRef = useRef(null);
 
   const load = async () => {
@@ -30,6 +41,7 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("category", selectedCategory);
 
     try {
       await api.post(`/documents/candidate/${candidateId}`, formData, {
@@ -62,6 +74,16 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
     }
   };
 
+  const handlePreview = (doc) => {
+    // Only preview PDF and images
+    if (doc.mime_type?.includes("pdf") || doc.mime_type?.includes("image")) {
+      setPreviewDoc(doc);
+    } else {
+      // For other types, download instead
+      handleDownload(doc);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
       await api.delete(`/documents/${id}`);
@@ -69,6 +91,15 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
       load();
     } catch (err) {
       alert(err.response?.data?.message || "Errore durante l'eliminazione");
+    }
+  };
+
+  const handleCategoryChange = async (docId, newCategory) => {
+    try {
+      await api.patch(`/documents/${docId}`, { category: newCategory });
+      load();
+    } catch (err) {
+      alert("Errore aggiornamento categoria");
     }
   };
 
@@ -107,6 +138,22 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
     );
   };
 
+  const canPreview = (mimeType) => {
+    return mimeType?.includes("pdf") || mimeType?.includes("image");
+  };
+
+  const filteredDocs = filterCategory === "all"
+    ? documents
+    : documents.filter(d => (d.category || "other") === filterCategory);
+
+  // Group documents by category
+  const groupedDocs = filteredDocs.reduce((acc, doc) => {
+    const cat = doc.category || "other";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(doc);
+    return acc;
+  }, {});
+
   return (
     <div className="documents-section">
       <div className="documents-header">
@@ -116,35 +163,73 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
             <polyline points="14 2 14 8 20 8"/>
           </svg>
           Documenti
+          <span className="documents-count">{documents.length}</span>
         </h3>
         {canEdit && (
-          <label className="upload-btn">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              onChange={handleUpload}
-              disabled={uploading}
-              style={{ display: "none" }}
-            />
-            {uploading ? (
-              <span className="uploading">
-                <span className="spinner-small"></span>
-                Caricamento...
-              </span>
-            ) : (
-              <>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                Carica documento
-              </>
-            )}
-          </label>
+          <div className="upload-controls">
+            <select
+              className="category-select"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              {Object.entries(CATEGORIES).map(([key, val]) => (
+                <option key={key} value={key}>{val.label}</option>
+              ))}
+            </select>
+            <label className="upload-btn">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                onChange={handleUpload}
+                disabled={uploading}
+                style={{ display: "none" }}
+              />
+              {uploading ? (
+                <span className="uploading">
+                  <span className="spinner-small"></span>
+                  Caricamento...
+                </span>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Carica
+                </>
+              )}
+            </label>
+          </div>
         )}
       </div>
+
+      {/* Category Filter */}
+      {documents.length > 0 && (
+        <div className="documents-filter">
+          <button
+            className={`filter-chip ${filterCategory === "all" ? "active" : ""}`}
+            onClick={() => setFilterCategory("all")}
+          >
+            Tutti ({documents.length})
+          </button>
+          {Object.entries(CATEGORIES).map(([key, val]) => {
+            const count = documents.filter(d => (d.category || "other") === key).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={key}
+                className={`filter-chip ${filterCategory === key ? "active" : ""}`}
+                onClick={() => setFilterCategory(key)}
+                style={{ "--chip-color": val.color }}
+              >
+                {val.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div className="documents-loading">Caricamento...</div>
@@ -156,21 +241,41 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
           </svg>
           <p>Nessun documento caricato</p>
         </div>
+      ) : filteredDocs.length === 0 ? (
+        <div className="documents-empty">
+          <p>Nessun documento in questa categoria</p>
+        </div>
       ) : (
         <div className="documents-list">
-          {documents.map(doc => (
+          {filteredDocs.map(doc => (
             <div key={doc.id} className="document-item">
-              <div className="document-icon">
+              <div
+                className="document-icon"
+                style={{ backgroundColor: CATEGORIES[doc.category || "other"]?.color + "20" }}
+              >
                 {getFileIcon(doc.mime_type)}
               </div>
               <div className="document-info">
                 <span className="document-name">{doc.original_name}</span>
                 <span className="document-meta">
+                  <span
+                    className="document-category-badge"
+                    style={{ backgroundColor: CATEGORIES[doc.category || "other"]?.color }}
+                  >
+                    {CATEGORIES[doc.category || "other"]?.label}
+                  </span>
                   {formatFileSize(doc.size)} • {new Date(doc.uploaded_at).toLocaleDateString("it-IT")}
-                  {doc.uploader_email && ` • ${doc.uploader_email}`}
                 </span>
               </div>
               <div className="document-actions">
+                {canPreview(doc.mime_type) && (
+                  <button className="btn-icon-small" title="Anteprima" onClick={() => handlePreview(doc)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                )}
                 <button className="btn-icon-small" title="Scarica" onClick={() => handleDownload(doc)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -178,6 +283,18 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
                 </button>
+                {canEdit && (
+                  <select
+                    className="category-select-small"
+                    value={doc.category || "other"}
+                    onChange={(e) => handleCategoryChange(doc.id, e.target.value)}
+                    title="Cambia categoria"
+                  >
+                    {Object.entries(CATEGORIES).map(([key, val]) => (
+                      <option key={key} value={key}>{val.label}</option>
+                    ))}
+                  </select>
+                )}
                 {canDelete && (
                   <button className="btn-icon-small btn-danger-icon" title="Elimina" onClick={() => setDeleteConfirm(doc)}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -189,6 +306,45 @@ export default function DocumentsSection({ candidateId, canEdit, canDelete }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewDoc && (
+        <div className="modal-overlay preview-overlay" onClick={() => setPreviewDoc(null)}>
+          <div className="preview-modal" onClick={e => e.stopPropagation()}>
+            <div className="preview-header">
+              <h3>{previewDoc.original_name}</h3>
+              <div className="preview-actions">
+                <button className="btn-icon" title="Scarica" onClick={() => handleDownload(previewDoc)}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+                <button className="btn-icon" onClick={() => setPreviewDoc(null)}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="preview-content">
+              {previewDoc.mime_type?.includes("pdf") ? (
+                <iframe
+                  src={`/api/documents/${previewDoc.id}/preview`}
+                  title={previewDoc.original_name}
+                />
+              ) : previewDoc.mime_type?.includes("image") ? (
+                <img
+                  src={`/api/documents/${previewDoc.id}/preview`}
+                  alt={previewDoc.original_name}
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
 

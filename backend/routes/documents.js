@@ -70,16 +70,19 @@ router.get("/candidate/:candidateId", requireRole("admin", "secretary"), (req, r
 // Upload documento
 router.post("/candidate/:candidateId", requireRole("admin", "secretary"), upload.single("file"), (req, res) => {
   const { candidateId } = req.params;
+  const { category } = req.body;
   const file = req.file;
 
   if (!file) {
     return res.status(400).json({ message: "Nessun file caricato" });
   }
 
+  const docCategory = category || "other";
+
   db.run(
-    `INSERT INTO documents (candidate_id, filename, original_name, mime_type, size, uploaded_by)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [candidateId, file.filename, file.originalname, file.mimetype, file.size, req.user.id],
+    `INSERT INTO documents (candidate_id, filename, original_name, mime_type, size, uploaded_by, category)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [candidateId, file.filename, file.originalname, file.mimetype, file.size, req.user.id, docCategory],
     function (err) {
       if (err) {
         // Rimuovi file se errore DB
@@ -103,6 +106,25 @@ router.post("/candidate/:candidateId", requireRole("admin", "secretary"), upload
   );
 });
 
+// Preview documento (inline)
+router.get("/:id/preview", requireRole("admin", "secretary"), (req, res) => {
+  const { id } = req.params;
+  db.get("SELECT * FROM documents WHERE id = ?", [id], (err, doc) => {
+    if (err) return res.status(500).json({ message: "Errore DB" });
+    if (!doc) return res.status(404).json({ message: "Documento non trovato" });
+
+    const filePath = path.join(uploadsDir, doc.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File non trovato" });
+    }
+
+    // Set content-disposition to inline for preview
+    res.setHeader("Content-Type", doc.mime_type);
+    res.setHeader("Content-Disposition", `inline; filename="${doc.original_name}"`);
+    res.sendFile(filePath);
+  });
+});
+
 // Download documento
 router.get("/:id/download", requireRole("admin", "secretary"), (req, res) => {
   const { id } = req.params;
@@ -117,6 +139,26 @@ router.get("/:id/download", requireRole("admin", "secretary"), (req, res) => {
 
     res.download(filePath, doc.original_name);
   });
+});
+
+// Update document category
+router.patch("/:id", requireRole("admin", "secretary"), (req, res) => {
+  const { id } = req.params;
+  const { category } = req.body;
+
+  if (!category) {
+    return res.status(400).json({ message: "Categoria obbligatoria" });
+  }
+
+  db.run(
+    "UPDATE documents SET category = ? WHERE id = ?",
+    [category, id],
+    function(err) {
+      if (err) return res.status(500).json({ message: "Errore DB" });
+      if (this.changes === 0) return res.status(404).json({ message: "Documento non trovato" });
+      res.json({ message: "Categoria aggiornata" });
+    }
+  );
 });
 
 // Elimina documento

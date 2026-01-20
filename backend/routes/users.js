@@ -39,7 +39,7 @@ router.post("/", requireRole("admin"), async (req, res) => {
     return res.status(400).json({ message: "Email e password sono obbligatori" });
   }
 
-  if (!["admin", "secretary"].includes(role)) {
+  if (!["admin", "secretary", "viewer"].includes(role)) {
     return res.status(400).json({ message: "Ruolo non valido" });
   }
 

@@ -140,7 +140,7 @@ export default function UsersPage() {
                 <div className="user-info">
                   <span className="user-email">{user.email}</span>
                   <span className={`user-role-badge role-${user.role}`}>
-                    {user.role === "admin" ? "Amministratore" : "Segreteria"}
+                    {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
                   </span>
                 </div>
                 <div className="user-actions">
@@ -233,6 +233,7 @@ export default function UsersPage() {
                   disabled={formLoading}
                 >
                   <option value="secretary">Segreteria</option>
+                  <option value="viewer">Visualizzatore</option>
                   <option value="admin">Amministratore</option>
                 </select>
               </div>

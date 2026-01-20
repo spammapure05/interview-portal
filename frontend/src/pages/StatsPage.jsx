@@ -278,22 +278,46 @@ export default function StatsPage() {
           </div>
           <div className="stats-card-body">
             <div className="export-buttons">
-              <button className="export-btn" onClick={exportCandidates}>
+              <a href="/api/export/candidates" className="export-btn" download>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Esporta Candidati (CSV)
-              </button>
-              <button className="export-btn" onClick={exportInterviews}>
+                Candidati (CSV)
+              </a>
+              <a href="/api/export/interviews" className="export-btn" download>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Esporta Colloqui (CSV)
-              </button>
+                Colloqui (CSV)
+              </a>
+              <a href="/api/export/meetings" className="export-btn" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Riunioni (CSV)
+              </a>
+              <a href="/api/export/vehicle-bookings" className="export-btn" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Veicoli (CSV)
+              </a>
+              <a href="/api/export/stats" className="export-btn export-btn-primary" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Report Completo (CSV)
+              </a>
             </div>
           </div>
         </div>

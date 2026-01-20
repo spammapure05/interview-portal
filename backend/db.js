@@ -171,6 +171,91 @@ db.serialize(() => {
       FOREIGN KEY(created_by) REFERENCES users(id)
     )
   `);
+
+  // Configurazione SMTP
+  db.run(`
+    CREATE TABLE IF NOT EXISTS smtp_config (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      host TEXT NOT NULL,
+      port INTEGER NOT NULL DEFAULT 587,
+      secure INTEGER DEFAULT 0,
+      username TEXT,
+      password TEXT,
+      from_email TEXT NOT NULL,
+      from_name TEXT DEFAULT 'Interview Portal',
+      enabled INTEGER DEFAULT 0,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_by INTEGER,
+      FOREIGN KEY(updated_by) REFERENCES users(id)
+    )
+  `);
+
+  // Template notifiche
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notification_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL UNIQUE CHECK(type IN ('interview_reminder', 'meeting_reminder', 'vehicle_reminder')),
+      name TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      enabled INTEGER DEFAULT 1,
+      hours_before INTEGER DEFAULT 24,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_by INTEGER,
+      FOREIGN KEY(updated_by) REFERENCES users(id)
+    )
+  `);
+
+  // Notifiche programmate (coda)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS scheduled_notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      template_type TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER NOT NULL,
+      recipient_email TEXT NOT NULL,
+      recipient_name TEXT,
+      scheduled_for TEXT NOT NULL,
+      sent INTEGER DEFAULT 0,
+      sent_at TEXT,
+      error TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Migration: add viewer role
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('admin', 'secretary', 'viewer')),
+      permissions TEXT DEFAULT '{}',
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {});
+
+  // Migration: add category to documents
+  db.run(`ALTER TABLE documents ADD COLUMN category TEXT DEFAULT 'other'`, (err) => {});
+
+  // Migration: add notification_email to vehicle_bookings
+  db.run(`ALTER TABLE vehicle_bookings ADD COLUMN notification_email TEXT`, (err) => {});
+
+  // Migration: add notification_email to room_meetings
+  db.run(`ALTER TABLE room_meetings ADD COLUMN notification_email TEXT`, (err) => {});
+
+  // Insert default notification templates
+  db.run(`
+    INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)
+    VALUES
+      ('interview_reminder', 'Promemoria Colloquio', 'Promemoria: Colloquio programmato per {{candidate_name}}',
+       '<h2>Promemoria Colloquio</h2><p>Ti ricordiamo che è programmato un colloquio con <strong>{{candidate_name}}</strong>.</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{time}}</p><p><strong>Luogo:</strong> {{location}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 24),
+      ('meeting_reminder', 'Promemoria Riunione', 'Promemoria: Riunione "{{meeting_title}}" in {{room_name}}',
+       '<h2>Promemoria Riunione</h2><p>Ti ricordiamo la riunione <strong>{{meeting_title}}</strong>.</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p><strong>Sala:</strong> {{room_name}}</p><p>{{description}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 24),
+      ('vehicle_reminder', 'Promemoria Prenotazione Veicolo', 'Promemoria: Prenotazione veicolo {{plate}}',
+       '<h2>Promemoria Prenotazione Veicolo</h2><p>Ti ricordiamo la prenotazione del veicolo.</p><p><strong>Veicolo:</strong> {{brand}} {{model}} ({{plate}})</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{time}}</p><p><strong>Destinazione:</strong> {{destination}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 24)
+  `, (err) => {});
 });
 
 export default db;

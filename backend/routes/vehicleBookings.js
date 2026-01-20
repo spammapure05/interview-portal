@@ -85,6 +85,54 @@ function checkConflicts(vehicleId, startTime, endTime, excludeId = null) {
   });
 }
 
+// Check availability endpoint
+router.post("/check-availability", async (req, res) => {
+  const { vehicle_id, start_time, end_time, exclude_id } = req.body;
+
+  if (!vehicle_id || !start_time) {
+    return res.status(400).json({ message: "Parametri mancanti" });
+  }
+
+  try {
+    const conflicts = await checkConflicts(vehicle_id, start_time, end_time, exclude_id);
+
+    if (conflicts.length === 0) {
+      return res.json({ available: true });
+    }
+
+    // Find alternative vehicles available at the same time
+    const alternativeVehicles = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT v.id, v.plate, v.brand, v.model, v.color
+         FROM vehicles v
+         WHERE v.active = 1 AND v.id != ?
+           AND v.id NOT IN (
+             SELECT vehicle_id FROM vehicle_bookings
+             WHERE returned = 0
+               AND start_time < ?
+               AND (end_time > ? OR end_time IS NULL)
+           )`,
+        [vehicle_id, end_time || "9999-12-31", start_time],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    res.json({
+      available: false,
+      conflicts,
+      suggestions: {
+        alternativeVehicles
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Errore server" });
+  }
+});
+
 // Crea nuova prenotazione
 router.post("/", async (req, res) => {
   const { vehicle_id, driver_name, destination, purpose, start_time, end_time, km_start, notes } = req.body;

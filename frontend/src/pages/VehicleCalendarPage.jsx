@@ -344,13 +344,15 @@ export default function VehicleCalendarPage() {
             <p className="page-subtitle-modern">Prenota e gestisci i veicoli aziendali</p>
           </div>
         </div>
-        <button className="btn-primary-modern" onClick={() => openNewBooking()}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nuova Prenotazione
-        </button>
+        {user && user.role !== "viewer" && (
+          <button className="btn-primary-modern" onClick={() => openNewBooking()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuova Prenotazione
+          </button>
+        )}
       </div>
 
       {/* Vehicle Filter */}
@@ -505,44 +507,46 @@ export default function VehicleCalendarPage() {
                           </div>
                         )}
                       </div>
-                      <div className="detail-item-actions">
-                        {!booking.returned && (
+                      {user && user.role !== "viewer" && (
+                        <div className="detail-item-actions">
+                          {!booking.returned && (
+                            <button
+                              className="btn-icon-small btn-return"
+                              title="Registra restituzione"
+                              onClick={() => {
+                                setShowReturnModal(booking);
+                                setReturnKmEnd("");
+                                setReturnNotes("");
+                              }}
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="9 10 4 15 9 20"/>
+                                <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                              </svg>
+                            </button>
+                          )}
                           <button
-                            className="btn-icon-small btn-return"
-                            title="Registra restituzione"
-                            onClick={() => {
-                              setShowReturnModal(booking);
-                              setReturnKmEnd("");
-                              setReturnNotes("");
-                            }}
+                            className="btn-icon-small"
+                            title="Modifica"
+                            onClick={() => openEditBooking(booking)}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="9 10 4 15 9 20"/>
-                              <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                             </svg>
                           </button>
-                        )}
-                        <button
-                          className="btn-icon-small"
-                          title="Modifica"
-                          onClick={() => openEditBooking(booking)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="btn-icon-small btn-danger-icon"
-                          title="Elimina"
-                          onClick={() => setDeleteConfirm(booking)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
+                          <button
+                            className="btn-icon-small btn-danger-icon"
+                            title="Elimina"
+                            onClick={() => setDeleteConfirm(booking)}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../authContext";
+import GlobalSearch from "./GlobalSearch";
 
 export default function Layout() {
   const { user, logout, showTimeoutWarning, timeRemaining, extendSession } = useAuth();
@@ -95,15 +96,13 @@ export default function Layout() {
                       </svg>
                       Calendario Colloqui
                     </Link>
-                    {(user.role === "admin" || user.role === "secretary") && (
-                      <Link to="/candidates" className={`dropdown-item ${isActive("/candidates") ? "active" : ""}`}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                          <circle cx="9" cy="7" r="4"/>
-                        </svg>
-                        Anagrafica Candidati
-                      </Link>
-                    )}
+                    <Link to="/candidates" className={`dropdown-item ${isActive("/candidates") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                      </svg>
+                      Anagrafica Candidati
+                    </Link>
                   </div>
                 )}
               </div>
@@ -191,7 +190,7 @@ export default function Layout() {
 
               {/* Admin Section */}
               {user.role === "admin" && (
-                <div className={`nav-dropdown ${isDropdownActive(["/stats", "/users", "/global-calendar"]) ? "has-active" : ""}`}>
+                <div className={`nav-dropdown ${isDropdownActive(["/stats", "/users", "/global-calendar", "/notification-settings"]) ? "has-active" : ""}`}>
                   <button
                     className={`nav-link dropdown-toggle ${openDropdown === "admin" ? "open" : ""}`}
                     onClick={() => toggleDropdown("admin")}
@@ -236,6 +235,13 @@ export default function Layout() {
                         </svg>
                         Gestione Utenti
                       </Link>
+                      <Link to="/notification-settings" className={`dropdown-item ${isActive("/notification-settings") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        Impostazioni Notifiche
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -245,6 +251,7 @@ export default function Layout() {
         </div>
         {user && (
           <div className="app-header-right">
+            <GlobalSearch />
             <div className="user-pill">
               <div className="user-avatar">
                 {user.email.charAt(0).toUpperCase()}

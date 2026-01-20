@@ -12,6 +12,7 @@ import RoomCalendarPage from "./pages/RoomCalendarPage";
 import VehiclesPage from "./pages/VehiclesPage";
 import VehicleCalendarPage from "./pages/VehicleCalendarPage";
 import GlobalCalendarPage from "./pages/GlobalCalendarPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="vehicles" element={<VehiclesPage />} />
         <Route path="vehicle-calendar" element={<VehicleCalendarPage />} />
         <Route path="global-calendar" element={<GlobalCalendarPage />} />
+        <Route path="notification-settings" element={<NotificationSettingsPage />} />
       </Route>
     </Routes>
   );

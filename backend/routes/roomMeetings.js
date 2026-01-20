@@ -80,6 +80,111 @@ function checkConflicts(roomId, startTime, endTime, excludeId = null) {
   });
 }
 
+// Trova slot disponibili
+function findAvailableSlots(roomId, date, durationMinutes) {
+  return new Promise((resolve, reject) => {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(8, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(20, 0, 0, 0);
+
+    const sql = `
+      SELECT start_time, end_time
+      FROM room_meetings
+      WHERE room_id = ?
+        AND DATE(start_time) = DATE(?)
+      ORDER BY start_time
+    `;
+
+    db.all(sql, [roomId, date], (err, meetings) => {
+      if (err) return reject(err);
+
+      const slots = [];
+      let currentStart = startOfDay;
+
+      meetings.forEach(meeting => {
+        const meetingStart = new Date(meeting.start_time);
+        const meetingEnd = new Date(meeting.end_time);
+
+        // Check if there's a gap before this meeting
+        const gap = (meetingStart - currentStart) / (1000 * 60);
+        if (gap >= durationMinutes) {
+          slots.push({
+            start: currentStart.toISOString(),
+            end: new Date(currentStart.getTime() + durationMinutes * 60000).toISOString()
+          });
+        }
+        currentStart = meetingEnd;
+      });
+
+      // Check gap after last meeting until end of day
+      const finalGap = (endOfDay - currentStart) / (1000 * 60);
+      if (finalGap >= durationMinutes) {
+        slots.push({
+          start: currentStart.toISOString(),
+          end: new Date(currentStart.getTime() + durationMinutes * 60000).toISOString()
+        });
+      }
+
+      resolve(slots.slice(0, 5)); // Return max 5 suggestions
+    });
+  });
+}
+
+// Check availability endpoint
+router.post("/check-availability", async (req, res) => {
+  const { room_id, start_time, end_time, exclude_id } = req.body;
+
+  if (!room_id || !start_time || !end_time) {
+    return res.status(400).json({ message: "Parametri mancanti" });
+  }
+
+  try {
+    const conflicts = await checkConflicts(room_id, start_time, end_time, exclude_id);
+
+    if (conflicts.length === 0) {
+      return res.json({ available: true });
+    }
+
+    // Calculate duration in minutes
+    const duration = (new Date(end_time) - new Date(start_time)) / (1000 * 60);
+    const date = start_time.split("T")[0];
+
+    // Find alternative slots in the same room
+    const sameRoomSlots = await findAvailableSlots(room_id, date, duration);
+
+    // Find alternative rooms available at the same time
+    const alternativeRooms = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT r.id, r.name, r.color
+         FROM rooms r
+         WHERE r.active = 1 AND r.id != ?
+           AND r.id NOT IN (
+             SELECT room_id FROM room_meetings
+             WHERE start_time < ? AND end_time > ?
+           )`,
+        [room_id, end_time, start_time],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    res.json({
+      available: false,
+      conflicts,
+      suggestions: {
+        sameRoomSlots,
+        alternativeRooms
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Errore server" });
+  }
+});
+
 // Crea nuova riunione
 router.post("/", async (req, res) => {
   const { room_id, title, description, start_time, end_time, organizer, participants } = req.body;

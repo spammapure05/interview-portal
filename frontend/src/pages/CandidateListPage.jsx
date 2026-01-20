@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { Link } from "react-router-dom";
 import CandidateForm from "../components/CandidateForm";
+import { useAuth } from "../authContext";
 
 export default function CandidateListPage() {
   const [candidates, setCandidates] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [suitabilityFilter, setSuitabilityFilter] = useState("all");
+  const { user } = useAuth();
+  const canEdit = user && ["admin", "secretary"].includes(user.role);
 
   const load = async () => {
     try {
@@ -71,11 +74,13 @@ export default function CandidateListPage() {
         </div>
       </div>
 
-      <div className="page-layout">
-        {/* Sidebar - Form */}
-        <aside className="page-sidebar-modern">
-          <CandidateForm onSaved={load} />
-        </aside>
+      <div className={`page-layout ${!canEdit ? 'no-sidebar' : ''}`}>
+        {/* Sidebar - Form (solo per admin/secretary) */}
+        {canEdit && (
+          <aside className="page-sidebar-modern">
+            <CandidateForm onSaved={load} />
+          </aside>
+        )}
 
         {/* Main Content */}
         <div className="page-main">
@@ -120,11 +125,19 @@ export default function CandidateListPage() {
             </div>
           </div>
 
-          {/* Results Count */}
+          {/* Results Count & Export */}
           <div className="results-info">
             <span className="results-count-modern">
               {filteredCandidates.length} candidat{filteredCandidates.length !== 1 ? "i" : "o"}
             </span>
+            <a href="/api/export/candidates" className="export-btn-small" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Esporta CSV
+            </a>
           </div>
 
           {/* Candidates List */}

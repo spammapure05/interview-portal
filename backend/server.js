@@ -18,6 +18,10 @@ import roomsRoutes from "./routes/rooms.js";
 import roomMeetingsRoutes from "./routes/roomMeetings.js";
 import vehiclesRoutes from "./routes/vehicles.js";
 import vehicleBookingsRoutes from "./routes/vehicleBookings.js";
+import settingsRoutes from "./routes/settings.js";
+import searchRoutes from "./routes/search.js";
+import exportRoutes from "./routes/export.js";
+import { startNotificationScheduler } from "./services/emailService.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -89,6 +93,9 @@ app.use("/api/rooms", roomsRoutes);
 app.use("/api/room-meetings", roomMeetingsRoutes);
 app.use("/api/vehicles", vehiclesRoutes);
 app.use("/api/vehicle-bookings", vehicleBookingsRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/export", exportRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");
@@ -102,4 +109,6 @@ app.get("*", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Backend in ascolto sulla porta ${PORT}`);
+  // Start notification scheduler (check every 5 minutes)
+  startNotificationScheduler(5);
 });

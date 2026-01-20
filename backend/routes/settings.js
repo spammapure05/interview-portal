@@ -1,11 +1,11 @@
 import express from "express";
 import db from "../db.js";
-import { authenticateToken, requireAdmin } from "../middleware/auth.js";
+import { requireRole } from "../rolesMiddleware.js";
 
 const router = express.Router();
 
 // Get SMTP configuration (admin only)
-router.get("/smtp", authenticateToken, requireAdmin, (req, res) => {
+router.get("/smtp", requireRole("admin"), (req, res) => {
   db.get("SELECT * FROM smtp_config WHERE id = 1", (err, row) => {
     if (err) return res.status(500).json({ message: "Errore database" });
 
@@ -33,7 +33,7 @@ router.get("/smtp", authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Update SMTP configuration (admin only)
-router.put("/smtp", authenticateToken, requireAdmin, (req, res) => {
+router.put("/smtp", requireRole("admin"), (req, res) => {
   const { host, port, secure, username, password, from_email, from_name, enabled } = req.body;
 
   if (!host || !from_email) {
@@ -75,7 +75,7 @@ router.put("/smtp", authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Test SMTP connection (admin only)
-router.post("/smtp/test", authenticateToken, requireAdmin, async (req, res) => {
+router.post("/smtp/test", requireRole("admin"), async (req, res) => {
   const { test_email } = req.body;
 
   if (!test_email) {
@@ -122,7 +122,7 @@ router.post("/smtp/test", authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // Get all notification templates
-router.get("/templates", authenticateToken, requireAdmin, (req, res) => {
+router.get("/templates", requireRole("admin"), (req, res) => {
   db.all("SELECT * FROM notification_templates ORDER BY type", (err, rows) => {
     if (err) return res.status(500).json({ message: "Errore database" });
     res.json(rows.map(r => ({ ...r, enabled: !!r.enabled })));
@@ -130,7 +130,7 @@ router.get("/templates", authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Get single notification template
-router.get("/templates/:type", authenticateToken, requireAdmin, (req, res) => {
+router.get("/templates/:type", requireRole("admin"), (req, res) => {
   db.get("SELECT * FROM notification_templates WHERE type = ?", [req.params.type], (err, row) => {
     if (err) return res.status(500).json({ message: "Errore database" });
     if (!row) return res.status(404).json({ message: "Template non trovato" });
@@ -139,7 +139,7 @@ router.get("/templates/:type", authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Update notification template
-router.put("/templates/:type", authenticateToken, requireAdmin, (req, res) => {
+router.put("/templates/:type", requireRole("admin"), (req, res) => {
   const { name, subject, body, enabled, hours_before } = req.body;
 
   if (!name || !subject || !body) {

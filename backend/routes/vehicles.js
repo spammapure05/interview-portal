@@ -35,15 +35,15 @@ router.get("/:id", (req, res) => {
 
 // Crea nuovo veicolo (solo admin)
 router.post("/", requireRole("admin"), (req, res) => {
-  const { plate, brand, model, fuel_type, current_km, notes, color } = req.body;
+  const { plate, brand, model, fuel_type, current_km, notes, color, parking_location } = req.body;
 
   if (!plate || !brand || !model) {
     return res.status(400).json({ message: "Targa, marca e modello sono obbligatori" });
   }
 
   db.run(
-    `INSERT INTO vehicles (plate, brand, model, fuel_type, current_km, notes, color)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO vehicles (plate, brand, model, fuel_type, current_km, notes, color, parking_location)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       plate.toUpperCase(),
       brand,
@@ -51,7 +51,8 @@ router.post("/", requireRole("admin"), (req, res) => {
       fuel_type || null,
       current_km || 0,
       notes || null,
-      color || "#3B82F6"
+      color || "#3B82F6",
+      parking_location || null
     ],
     function (err) {
       if (err) {
@@ -72,6 +73,7 @@ router.post("/", requireRole("admin"), (req, res) => {
         current_km: current_km || 0,
         notes,
         color: color || "#3B82F6",
+        parking_location,
         active: 1
       });
     }
@@ -81,7 +83,7 @@ router.post("/", requireRole("admin"), (req, res) => {
 // Modifica veicolo (solo admin)
 router.put("/:id", requireRole("admin"), (req, res) => {
   const { id } = req.params;
-  const { plate, brand, model, fuel_type, current_km, notes, color, active } = req.body;
+  const { plate, brand, model, fuel_type, current_km, notes, color, active, parking_location } = req.body;
 
   if (!plate || !brand || !model) {
     return res.status(400).json({ message: "Targa, marca e modello sono obbligatori" });
@@ -89,7 +91,7 @@ router.put("/:id", requireRole("admin"), (req, res) => {
 
   db.run(
     `UPDATE vehicles
-     SET plate = ?, brand = ?, model = ?, fuel_type = ?, current_km = ?, notes = ?, color = ?, active = ?
+     SET plate = ?, brand = ?, model = ?, fuel_type = ?, current_km = ?, notes = ?, color = ?, active = ?, parking_location = ?
      WHERE id = ?`,
     [
       plate.toUpperCase(),
@@ -100,6 +102,7 @@ router.put("/:id", requireRole("admin"), (req, res) => {
       notes || null,
       color || "#3B82F6",
       active !== undefined ? active : 1,
+      parking_location || null,
       id
     ],
     function (err) {

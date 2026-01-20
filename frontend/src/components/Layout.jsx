@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../authContext";
 import GlobalSearch from "./GlobalSearch";
+import api from "../api";
 
 export default function Layout() {
   const { user, logout, showTimeoutWarning, timeRemaining, extendSession } = useAuth();
@@ -9,6 +10,7 @@ export default function Layout() {
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
   const dropdownRef = useRef(null);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   const handleLogout = () => {
     logout();
@@ -39,6 +41,24 @@ export default function Layout() {
   useEffect(() => {
     setOpenDropdown(null);
   }, [location.pathname]);
+
+  // Fetch pending requests count for admin badge
+  useEffect(() => {
+    if (user?.role === "admin") {
+      const fetchPendingCount = async () => {
+        try {
+          const res = await api.get("/booking-requests/count/pending");
+          setPendingRequestsCount(res.data.count);
+        } catch (err) {
+          console.error("Error fetching pending count:", err);
+        }
+      };
+      fetchPendingCount();
+      // Refresh every 60 seconds
+      const interval = setInterval(fetchPendingCount, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -182,6 +202,60 @@ export default function Layout() {
                           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
                         </svg>
                         Gestione Veicoli
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Richieste - Per tutti gli utenti */}
+              <div className={`nav-dropdown ${isDropdownActive(["/request-booking", "/my-requests", "/admin-requests"]) ? "has-active" : ""}`}>
+                <button
+                  className={`nav-link dropdown-toggle ${openDropdown === "richieste" ? "open" : ""}`}
+                  onClick={() => toggleDropdown("richieste")}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="18" x2="12" y2="12"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                  </svg>
+                  <span>Richieste</span>
+                  {user.role === "admin" && pendingRequestsCount > 0 && (
+                    <span className="nav-badge">{pendingRequestsCount}</span>
+                  )}
+                  <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {openDropdown === "richieste" && (
+                  <div className="dropdown-menu">
+                    <Link to="/request-booking" className={`dropdown-item ${isActive("/request-booking") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      Nuova Richiesta
+                    </Link>
+                    <Link to="/my-requests" className={`dropdown-item ${isActive("/my-requests") ? "active" : ""}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                      </svg>
+                      Le Mie Richieste
+                    </Link>
+                    {(user.role === "admin" || user.role === "secretary") && (
+                      <Link to="/admin-requests" className={`dropdown-item ${isActive("/admin-requests") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                          <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Gestione Richieste
+                        {pendingRequestsCount > 0 && (
+                          <span className="dropdown-badge">{pendingRequestsCount}</span>
+                        )}
                       </Link>
                     )}
                   </div>

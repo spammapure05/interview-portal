@@ -21,6 +21,7 @@ import vehicleBookingsRoutes from "./routes/vehicleBookings.js";
 import settingsRoutes from "./routes/settings.js";
 import searchRoutes from "./routes/search.js";
 import exportRoutes from "./routes/export.js";
+import bookingRequestsRoutes from "./routes/bookingRequests.js";
 import { startNotificationScheduler } from "./services/emailService.js";
 
 const app = express();
@@ -96,6 +97,7 @@ app.use("/api/vehicle-bookings", vehicleBookingsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/export", exportRoutes);
+app.use("/api/booking-requests", bookingRequestsRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");

@@ -256,6 +256,67 @@ db.serialize(() => {
       ('vehicle_reminder', 'Promemoria Prenotazione Veicolo', 'Promemoria: Prenotazione veicolo {{plate}}',
        '<h2>Promemoria Prenotazione Veicolo</h2><p>Ti ricordiamo la prenotazione del veicolo.</p><p><strong>Veicolo:</strong> {{brand}} {{model}} ({{plate}})</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{time}}</p><p><strong>Destinazione:</strong> {{destination}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 24)
   `, (err) => {});
+
+  // Migration: add parking_location to vehicles
+  db.run(`ALTER TABLE vehicles ADD COLUMN parking_location TEXT`, (err) => {});
+
+  // Richieste prenotazione (workflow approvazione)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS booking_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      request_type TEXT NOT NULL CHECK(request_type IN ('room', 'vehicle')),
+      requester_id INTEGER NOT NULL,
+      requester_email TEXT NOT NULL,
+      requester_name TEXT,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected', 'counter_proposed', 'counter_accepted', 'counter_rejected', 'cancelled')),
+      -- Per richieste sala
+      room_id INTEGER,
+      meeting_title TEXT,
+      meeting_description TEXT,
+      -- Per richieste veicolo
+      vehicle_id INTEGER,
+      driver_name TEXT,
+      destination TEXT,
+      purpose TEXT,
+      -- Date/orari richiesti
+      requested_start TEXT NOT NULL,
+      requested_end TEXT,
+      -- Controproposta admin
+      counter_room_id INTEGER,
+      counter_vehicle_id INTEGER,
+      counter_start TEXT,
+      counter_end TEXT,
+      counter_reason TEXT,
+      -- Gestione risposta
+      admin_id INTEGER,
+      admin_notes TEXT,
+      rejection_reason TEXT,
+      -- Timestamps
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      responded_at TEXT,
+      FOREIGN KEY(requester_id) REFERENCES users(id),
+      FOREIGN KEY(room_id) REFERENCES rooms(id),
+      FOREIGN KEY(vehicle_id) REFERENCES vehicles(id),
+      FOREIGN KEY(counter_room_id) REFERENCES rooms(id),
+      FOREIGN KEY(counter_vehicle_id) REFERENCES vehicles(id),
+      FOREIGN KEY(admin_id) REFERENCES users(id)
+    )
+  `);
+
+  // Template notifiche per richieste
+  db.run(`
+    INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)
+    VALUES
+      ('request_submitted', 'Nuova Richiesta', 'Nuova richiesta di prenotazione da {{requester_name}}',
+       '<h2>Nuova Richiesta di Prenotazione</h2><p><strong>{{requester_name}}</strong> ha inviato una richiesta di prenotazione.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Accedi al portale per gestire la richiesta.</p>', 0),
+      ('request_approved', 'Richiesta Approvata', 'La tua richiesta di prenotazione è stata approvata',
+       '<h2>Richiesta Approvata</h2><p>La tua richiesta di prenotazione è stata <strong>approvata</strong>.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+      ('request_rejected', 'Richiesta Rifiutata', 'La tua richiesta di prenotazione è stata rifiutata',
+       '<h2>Richiesta Rifiutata</h2><p>La tua richiesta di prenotazione è stata <strong>rifiutata</strong>.</p><p><strong>Motivo:</strong> {{rejection_reason}}</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p>Per ulteriori informazioni, contatta l''amministratore.</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+      ('request_counter', 'Controproposta Ricevuta', 'Hai ricevuto una controproposta per la tua richiesta',
+       '<h2>Controproposta Ricevuta</h2><p>L''amministratore ha proposto una modifica alla tua richiesta.</p><p><strong>Proposta originale:</strong> {{original_details}}</p><p><strong>Controproposta:</strong> {{counter_details}}</p><p><strong>Motivo:</strong> {{counter_reason}}</p><p>Accedi al portale per accettare o rifiutare la controproposta.</p>', 0)
+  `, (err) => {});
 });
 
 export default db;

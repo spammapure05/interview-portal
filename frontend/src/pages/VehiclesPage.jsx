@@ -35,6 +35,7 @@ export default function VehiclesPage() {
   const [fuelType, setFuelType] = useState("");
   const [currentKm, setCurrentKm] = useState("");
   const [notes, setNotes] = useState("");
+  const [parkingLocation, setParkingLocation] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [active, setActive] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
@@ -62,6 +63,7 @@ export default function VehiclesPage() {
     setFuelType("");
     setCurrentKm("");
     setNotes("");
+    setParkingLocation("");
     setColor(PRESET_COLORS[0]);
     setActive(true);
     setError("");
@@ -77,6 +79,7 @@ export default function VehiclesPage() {
     setFuelType(vehicle.fuel_type || "");
     setCurrentKm(vehicle.current_km || "");
     setNotes(vehicle.notes || "");
+    setParkingLocation(vehicle.parking_location || "");
     setColor(vehicle.color || PRESET_COLORS[0]);
     setActive(vehicle.active === 1);
     setError("");
@@ -95,6 +98,7 @@ export default function VehiclesPage() {
       fuel_type: fuelType || null,
       current_km: currentKm ? parseInt(currentKm) : 0,
       notes: notes || null,
+      parking_location: parkingLocation || null,
       color,
       active: active ? 1 : 0
     };
@@ -202,6 +206,15 @@ export default function VehiclesPage() {
                       </svg>
                       <span>{formatKm(vehicle.current_km)}</span>
                     </div>
+                    {vehicle.parking_location && (
+                      <div className="vehicle-detail">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <span>{vehicle.parking_location}</span>
+                      </div>
+                    )}
                   </div>
 
                   {vehicle.notes && (
@@ -324,23 +337,42 @@ export default function VehiclesPage() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v6l4 2"/>
-                  </svg>
-                  Chilometri attuali
-                </label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={currentKm}
-                  onChange={e => setCurrentKm(e.target.value)}
-                  disabled={formLoading}
-                  min="0"
-                  placeholder="Es. 50000"
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Chilometri attuali
+                  </label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={currentKm}
+                    onChange={e => setCurrentKm(e.target.value)}
+                    disabled={formLoading}
+                    min="0"
+                    placeholder="Es. 50000"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    Posizione Parcheggio
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={parkingLocation}
+                    onChange={e => setParkingLocation(e.target.value)}
+                    disabled={formLoading}
+                    placeholder="Es. Piano -1, Posto A12"
+                  />
+                </div>
               </div>
 
               <div className="form-group">

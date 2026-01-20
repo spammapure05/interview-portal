@@ -95,19 +95,15 @@ export default function GlobalSearch() {
   return (
     <div className={`global-search ${isFocused ? 'focused' : ''}`} ref={searchRef}>
       <div className="search-input-container">
-        <div className="search-icon-animated">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <div className="search-pulse"></div>
-          <div className="search-pulse delay"></div>
-        </div>
+        <svg className="search-icon-float" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
         <input
           ref={inputRef}
           type="text"
           className="global-search-input"
-          placeholder="Cerca ovunque..."
+          placeholder="Cerca..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
@@ -116,11 +112,6 @@ export default function GlobalSearch() {
           }}
           onBlur={() => setIsFocused(false)}
         />
-        {!query && !isFocused && (
-          <span className="search-hint">
-            <kbd>Ctrl</kbd>+<kbd>K</kbd>
-          </span>
-        )}
       </div>
 
       {showDropdown && (

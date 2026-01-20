@@ -91,24 +91,33 @@ export default function MyRequestsPage() {
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Caricamento...</p>
-        </div>
+      <div className="page-wrapper">
+        <div className="loading-state">Caricamento richieste...</div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-content">
-          <h1>Le Mie Richieste</h1>
-          <p className="page-subtitle">Storico delle tue richieste di prenotazione</p>
+    <div className="page-wrapper">
+      {/* Page Header */}
+      <div className="page-header-modern">
+        <div className="page-header-content">
+          <div className="page-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div>
+            <h1 className="page-title-modern">Le Mie Richieste</h1>
+            <p className="page-subtitle-modern">Storico e stato delle tue richieste di prenotazione</p>
+          </div>
         </div>
-        <Link to="/request-booking" className="btn btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px" }}>
+        <Link to="/request-booking" className="btn-primary-modern">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
@@ -116,47 +125,53 @@ export default function MyRequestsPage() {
         </Link>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && <div className="form-error">{error}</div>}
 
       {/* Filtri */}
-      <div className="filter-tabs" style={{ marginBottom: "1.5rem" }}>
+      <div className="requests-filter-bar">
         <button
-          className={`filter-tab ${filter === "all" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
-          Tutte ({requests.length})
+          <span className="filter-count">{requests.length}</span>
+          Tutte
         </button>
         <button
-          className={`filter-tab ${filter === "pending" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "pending" ? "active" : ""}`}
           onClick={() => setFilter("pending")}
         >
-          In Attesa ({requests.filter(r => r.status === "pending" || r.status === "counter_proposed").length})
+          <span className="filter-count">{requests.filter(r => r.status === "pending" || r.status === "counter_proposed").length}</span>
+          In Attesa
         </button>
         <button
-          className={`filter-tab ${filter === "room" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "room" ? "active" : ""}`}
           onClick={() => setFilter("room")}
         >
-          Sale ({requests.filter(r => r.request_type === "room").length})
+          <span className="filter-count">{requests.filter(r => r.request_type === "room").length}</span>
+          Sale
         </button>
         <button
-          className={`filter-tab ${filter === "vehicle" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "vehicle" ? "active" : ""}`}
           onClick={() => setFilter("vehicle")}
         >
-          Veicoli ({requests.filter(r => r.request_type === "vehicle").length})
+          <span className="filter-count">{requests.filter(r => r.request_type === "vehicle").length}</span>
+          Veicoli
         </button>
       </div>
 
       {filteredRequests.length === 0 ? (
-        <div className="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
+        <div className="empty-state-modern">
+          <div className="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
           <h3>Nessuna richiesta</h3>
           <p>Non hai ancora effettuato richieste di prenotazione</p>
-          <Link to="/request-booking" className="btn btn-primary">Nuova Richiesta</Link>
+          <Link to="/request-booking" className="btn-primary-modern">Nuova Richiesta</Link>
         </div>
       ) : (
         <div className="requests-list">

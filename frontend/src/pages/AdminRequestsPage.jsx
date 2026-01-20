@@ -146,74 +146,85 @@ export default function AdminRequestsPage() {
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Caricamento...</p>
-        </div>
+      <div className="page-wrapper">
+        <div className="loading-state">Caricamento richieste...</div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-content">
-          <h1>
-            Gestione Richieste
-            {pendingCount > 0 && (
-              <span className="badge-count" style={{ background: "#F59E0B", color: "white", marginLeft: "0.5rem", padding: "0.25rem 0.5rem", borderRadius: "999px", fontSize: "0.875rem" }}>
-                {pendingCount}
-              </span>
-            )}
-          </h1>
-          <p className="page-subtitle">Approva o rifiuta le richieste di prenotazione</p>
+    <div className="page-wrapper">
+      {/* Page Header */}
+      <div className="page-header-modern">
+        <div className="page-header-content">
+          <div className="page-icon" style={{ background: pendingCount > 0 ? "linear-gradient(135deg, #f59e0b, #d97706)" : undefined }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div>
+            <h1 className="page-title-modern">
+              Gestione Richieste
+              {pendingCount > 0 && (
+                <span className="pending-badge">{pendingCount}</span>
+              )}
+            </h1>
+            <p className="page-subtitle-modern">Approva, modifica o rifiuta le richieste di prenotazione</p>
+          </div>
         </div>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && <div className="form-error">{error}</div>}
 
       {/* Filtri */}
-      <div className="filter-tabs" style={{ marginBottom: "1.5rem" }}>
+      <div className="requests-filter-bar">
         <button
-          className={`filter-tab ${filter === "pending" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "pending" ? "active" : ""}`}
           onClick={() => setFilter("pending")}
         >
-          Da Gestire ({pendingCount})
+          <span className="filter-count">{pendingCount}</span>
+          Da Gestire
         </button>
         <button
-          className={`filter-tab ${filter === "counter" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "counter" ? "active" : ""}`}
           onClick={() => setFilter("counter")}
         >
-          In Attesa Risposta ({requests.filter(r => r.status === "counter_proposed").length})
+          <span className="filter-count">{requests.filter(r => r.status === "counter_proposed").length}</span>
+          Attesa Risposta
         </button>
         <button
-          className={`filter-tab ${filter === "approved" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "approved" ? "active" : ""}`}
           onClick={() => setFilter("approved")}
         >
+          <span className="filter-count">{requests.filter(r => r.status === "approved" || r.status === "counter_accepted").length}</span>
           Approvate
         </button>
         <button
-          className={`filter-tab ${filter === "all" ? "active" : ""}`}
+          className={`requests-filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
-          Tutte ({requests.length})
+          <span className="filter-count">{requests.length}</span>
+          Tutte
         </button>
       </div>
 
       {filteredRequests.length === 0 ? (
-        <div className="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
+        <div className="empty-state-modern">
+          <div className="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
           <h3>Nessuna richiesta</h3>
           <p>{filter === "pending" ? "Non ci sono richieste da gestire" : "Nessuna richiesta trovata"}</p>
         </div>
       ) : (
-        <div className="admin-requests-list">
+        <div className="requests-list">
           {filteredRequests.map(request => (
-            <div key={request.id} className="admin-request-card">
+            <div key={request.id} className="request-card admin-request-card">
               <div className="request-header">
                 <div className="request-type-icon" style={{ background: request.request_type === "room" ? (request.room_color || "#10B981") : (request.vehicle_color || "#F59E0B") }}>
                   {request.request_type === "room" ? (
@@ -333,7 +344,7 @@ export default function AdminRequestsPage() {
         </div>
       )}
 
-      {/* Modal Rifiuto */}
+      {/* Modal Rifiuto - style fixed */}
       {showModal && modalType === "reject" && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>

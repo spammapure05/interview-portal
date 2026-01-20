@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import api from "./api";
 
 const AuthContext = createContext(null);
@@ -17,6 +17,18 @@ export function AuthProvider({ children }) {
   const timeoutRef = useRef(null);
   const warningRef = useRef(null);
   const countdownRef = useRef(null);
+  const userRef = useRef(user);
+
+  // Mantieni userRef sincronizzato
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const clearAllTimers = () => {
+    clearTimeout(timeoutRef.current);
+    clearTimeout(warningRef.current);
+    clearInterval(countdownRef.current);
+  };
 
   const login = async (identifier, password) => {
     const res = await api.post("/auth/login", { identifier, password });
@@ -25,23 +37,18 @@ export function AuthProvider({ children }) {
     setUser(res.data.user);
   };
 
-  const logout = useCallback(() => {
+  const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("lastActivity");
     setUser(null);
     setShowTimeoutWarning(false);
-    clearTimeout(timeoutRef.current);
-    clearTimeout(warningRef.current);
-    clearInterval(countdownRef.current);
-  }, []);
+    clearAllTimers();
+  };
 
-  const resetTimeout = useCallback(() => {
-    if (!user) return;
+  const resetTimeout = () => {
+    if (!userRef.current) return;
 
-    // Clear existing timers
-    clearTimeout(timeoutRef.current);
-    clearTimeout(warningRef.current);
-    clearInterval(countdownRef.current);
+    clearAllTimers();
     setShowTimeoutWarning(false);
 
     // Update last activity
@@ -68,12 +75,12 @@ export function AuthProvider({ children }) {
     timeoutRef.current = setTimeout(() => {
       logout();
     }, SESSION_TIMEOUT);
-  }, [user, logout]);
+  };
 
-  const extendSession = useCallback(() => {
+  const extendSession = () => {
     setShowTimeoutWarning(false);
     resetTimeout();
-  }, [resetTimeout]);
+  };
 
   const fetchMe = async () => {
     try {
@@ -111,9 +118,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Setup activity listeners and timeout
+  // Setup activity listeners and timeout when user changes
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      clearAllTimers();
+      return;
+    }
 
     // Start timeout tracking
     resetTimeout();
@@ -122,6 +132,7 @@ export function AuthProvider({ children }) {
     const events = ["mousedown", "keydown", "scroll", "touchstart"];
 
     const handleActivity = () => {
+      // Solo reset se non c'è il warning attivo
       if (!showTimeoutWarning) {
         resetTimeout();
       }
@@ -133,15 +144,12 @@ export function AuthProvider({ children }) {
     });
 
     return () => {
-      // Cleanup
       events.forEach(event => {
         document.removeEventListener(event, handleActivity);
       });
-      clearTimeout(timeoutRef.current);
-      clearTimeout(warningRef.current);
-      clearInterval(countdownRef.current);
+      clearAllTimers();
     };
-  }, [user, resetTimeout, showTimeoutWarning]);
+  }, [user]); // Solo user come dipendenza
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoading, showTimeoutWarning, timeRemaining, extendSession }}>

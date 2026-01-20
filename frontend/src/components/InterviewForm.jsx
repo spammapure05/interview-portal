@@ -16,7 +16,8 @@ export default function InterviewForm({ interview, onSaved, onCancel }) {
     const load = async () => {
       try {
         const res = await api.get("/candidates");
-        setCandidates(res.data);
+        // L'API restituisce { data: [...], total: N }
+        setCandidates(res.data.data || res.data);
       } catch (err) {
         console.error("Errore caricando candidati", err);
       }
@@ -35,7 +36,8 @@ export default function InterviewForm({ interview, onSaved, onCancel }) {
   const reloadCandidates = async () => {
     try {
       const res = await api.get("/candidates");
-      setCandidates(res.data);
+      // L'API restituisce { data: [...], total: N }
+      setCandidates(res.data.data || res.data);
     } catch (err) {
       console.error("Errore ricaricando candidati", err);
     }

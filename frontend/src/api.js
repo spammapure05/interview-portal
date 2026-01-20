@@ -12,4 +12,18 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// Interceptor per gestire errori 401 (token scaduto/invalido)
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Token non valido, rimuovi e ricarica
+      localStorage.removeItem("token");
+      localStorage.removeItem("lastActivity");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

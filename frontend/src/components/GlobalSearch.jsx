@@ -8,7 +8,24 @@ export default function GlobalSearch() {
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef(null);
+  const inputRef = useRef(null);
   const debounceRef = useRef(null);
+
+  // Keyboard shortcut Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+      if (event.key === 'Escape') {
+        setShowDropdown(false);
+        inputRef.current?.blur();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,21 +90,37 @@ export default function GlobalSearch() {
     });
   };
 
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <div className="global-search" ref={searchRef}>
+    <div className={`global-search ${isFocused ? 'focused' : ''}`} ref={searchRef}>
       <div className="search-input-container">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <div className="search-icon-animated">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <div className="search-pulse"></div>
+          <div className="search-pulse delay"></div>
+        </div>
         <input
+          ref={inputRef}
           type="text"
           className="global-search-input"
-          placeholder="Cerca candidati, riunioni, veicoli..."
+          placeholder="Cerca ovunque..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => query.length >= 2 && results && setShowDropdown(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            if (query.length >= 2 && results) setShowDropdown(true);
+          }}
+          onBlur={() => setIsFocused(false)}
         />
+        {!query && !isFocused && (
+          <span className="search-hint">
+            <kbd>Ctrl</kbd>+<kbd>K</kbd>
+          </span>
+        )}
       </div>
 
       {showDropdown && (

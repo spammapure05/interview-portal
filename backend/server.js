@@ -3,9 +3,11 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import "./db.js";
+import db from "./db.js";
 import { authMiddleware } from "./authMiddleware.js";
-import authRoutes from "./routes/auth.js";
 import candidatesRoutes from "./routes/candidates.js";
 import interviewsRoutes from "./routes/interviews.js";
 import documentsRoutes from "./routes/documents.js";
@@ -22,14 +24,57 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
-// Rotte pubbliche
-app.use("/api/auth", authRoutes);
+// ===== ROTTE PUBBLICHE (senza autenticazione) =====
+
+// Health check
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-// Rotte protette
+// Login - PUBBLICA
+app.post("/api/auth/login", (req, res) => {
+  const { identifier, password } = req.body;
+
+  if (!identifier || !password) {
+    return res.status(400).json({ message: "Dati mancanti" });
+  }
+
+  const sql = `
+    SELECT * FROM users
+    WHERE email = ?
+      OR (instr(email, '@') > 0 AND substr(email, 1, instr(email, '@') - 1) = ?)
+  `;
+
+  db.get(sql, [identifier, identifier], async (err, user) => {
+    if (err) return res.status(500).json({ message: "Errore DB" });
+    if (!user) return res.status(401).json({ message: "Credenziali non valide" });
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ message: "Credenziali non valide" });
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "supersecret",
+      { expiresIn: "8h" }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role }
+    });
+  });
+});
+
+// ===== MIDDLEWARE AUTENTICAZIONE =====
+// Tutte le rotte /api/* successive richiedono autenticazione
 app.use("/api", authMiddleware);
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
+// ===== ROTTE PROTETTE (richiedono autenticazione) =====
+
+// Chi sono - PROTETTA
+app.get("/api/auth/me", (req, res) => {
+  res.json({ user: req.user });
+});
+
+// Altre rotte protette
 app.use("/api/candidates", candidatesRoutes);
 app.use("/api/interviews", interviewsRoutes);
 app.use("/api/documents", documentsRoutes);

@@ -194,7 +194,7 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS notification_templates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type TEXT NOT NULL UNIQUE CHECK(type IN ('interview_reminder', 'meeting_reminder', 'vehicle_reminder')),
+      type TEXT NOT NULL UNIQUE CHECK(type IN ('interview_reminder', 'meeting_reminder', 'vehicle_reminder', 'request_submitted', 'request_approved', 'request_rejected', 'request_counter')),
       name TEXT NOT NULL,
       subject TEXT NOT NULL,
       body TEXT NOT NULL,
@@ -353,19 +353,95 @@ db.serialize(() => {
     )
   `);
 
-  // Template notifiche per richieste
-  db.run(`
-    INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)
-    VALUES
-      ('request_submitted', 'Nuova Richiesta', 'Nuova richiesta di prenotazione da {{requester_name}}',
-       '<h2>Nuova Richiesta di Prenotazione</h2><p><strong>{{requester_name}}</strong> ha inviato una richiesta di prenotazione.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Accedi al portale per gestire la richiesta.</p>', 0),
-      ('request_approved', 'Richiesta Approvata', 'La tua richiesta di prenotazione è stata approvata',
-       '<h2>Richiesta Approvata</h2><p>La tua richiesta di prenotazione è stata <strong>approvata</strong>.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
-      ('request_rejected', 'Richiesta Rifiutata', 'La tua richiesta di prenotazione è stata rifiutata',
-       '<h2>Richiesta Rifiutata</h2><p>La tua richiesta di prenotazione è stata <strong>rifiutata</strong>.</p><p><strong>Motivo:</strong> {{rejection_reason}}</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p>Per ulteriori informazioni, contatta l''amministratore.</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
-      ('request_counter', 'Controproposta Ricevuta', 'Hai ricevuto una controproposta per la tua richiesta',
-       '<h2>Controproposta Ricevuta</h2><p>L''amministratore ha proposto una modifica alla tua richiesta.</p><p><strong>Proposta originale:</strong> {{original_details}}</p><p><strong>Controproposta:</strong> {{counter_details}}</p><p><strong>Motivo:</strong> {{counter_reason}}</p><p>Accedi al portale per accettare o rifiutare la controproposta.</p>', 0)
-  `, (err) => {});
+  // Migration: update notification_templates to support request types
+  db.get("SELECT sql FROM sqlite_master WHERE type='table' AND name='notification_templates'", (err, row) => {
+    if (err) return;
+
+    // Check if the current table has the request types in CHECK constraint
+    if (row && row.sql && !row.sql.includes("'request_submitted'")) {
+      console.log("Migrating notification_templates table to support request types...");
+
+      // Create new table with extended CHECK constraint
+      db.run(`
+        CREATE TABLE IF NOT EXISTS notification_templates_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL UNIQUE CHECK(type IN ('interview_reminder', 'meeting_reminder', 'vehicle_reminder', 'request_submitted', 'request_approved', 'request_rejected', 'request_counter')),
+          name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          body TEXT NOT NULL,
+          enabled INTEGER DEFAULT 1,
+          hours_before INTEGER DEFAULT 24,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_by INTEGER,
+          FOREIGN KEY(updated_by) REFERENCES users(id)
+        )
+      `, (err) => {
+        if (err) {
+          console.error("Error creating notification_templates_new:", err);
+          return;
+        }
+
+        // Copy data from old table
+        db.run(`
+          INSERT OR IGNORE INTO notification_templates_new (id, type, name, subject, body, enabled, hours_before, updated_at, updated_by)
+          SELECT id, type, name, subject, body, enabled, hours_before, updated_at, updated_by FROM notification_templates
+        `, (err) => {
+          if (err) {
+            console.error("Error copying notification_templates data:", err);
+            return;
+          }
+
+          // Drop old table
+          db.run(`DROP TABLE IF EXISTS notification_templates`, (err) => {
+            if (err) {
+              console.error("Error dropping old notification_templates table:", err);
+              return;
+            }
+
+            // Rename new table
+            db.run(`ALTER TABLE notification_templates_new RENAME TO notification_templates`, (err) => {
+              if (err) {
+                console.error("Error renaming notification_templates_new:", err);
+                return;
+              }
+              console.log("notification_templates table migration completed successfully!");
+
+              // Now insert the request templates
+              db.run(`
+                INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)
+                VALUES
+                  ('request_submitted', 'Nuova Richiesta', 'Nuova richiesta di prenotazione da {{requester_name}}',
+                   '<h2>Nuova Richiesta di Prenotazione</h2><p><strong>{{requester_name}}</strong> ha inviato una richiesta di prenotazione.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Accedi al portale per gestire la richiesta.</p>', 0),
+                  ('request_approved', 'Richiesta Approvata', 'La tua richiesta di prenotazione è stata approvata',
+                   '<h2>Richiesta Approvata</h2><p>La tua richiesta di prenotazione è stata <strong>approvata</strong>.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+                  ('request_rejected', 'Richiesta Rifiutata', 'La tua richiesta di prenotazione è stata rifiutata',
+                   '<h2>Richiesta Rifiutata</h2><p>La tua richiesta di prenotazione è stata <strong>rifiutata</strong>.</p><p><strong>Motivo:</strong> {{rejection_reason}}</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p>Per ulteriori informazioni, contatta l''amministratore.</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+                  ('request_counter', 'Controproposta Ricevuta', 'Hai ricevuto una controproposta per la tua richiesta',
+                   '<h2>Controproposta Ricevuta</h2><p>L''amministratore ha proposto una modifica alla tua richiesta.</p><p><strong>Proposta originale:</strong> {{original_details}}</p><p><strong>Controproposta:</strong> {{counter_details}}</p><p><strong>Motivo:</strong> {{counter_reason}}</p><p>Accedi al portale per accettare o rifiutare la controproposta.</p>', 0)
+              `, (err) => {
+                if (err) console.error("Error inserting request templates:", err);
+                else console.log("Request notification templates inserted successfully!");
+              });
+            });
+          });
+        });
+      });
+    } else {
+      // Table already has the new constraint, just insert templates
+      db.run(`
+        INSERT OR IGNORE INTO notification_templates (type, name, subject, body, hours_before)
+        VALUES
+          ('request_submitted', 'Nuova Richiesta', 'Nuova richiesta di prenotazione da {{requester_name}}',
+           '<h2>Nuova Richiesta di Prenotazione</h2><p><strong>{{requester_name}}</strong> ha inviato una richiesta di prenotazione.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Accedi al portale per gestire la richiesta.</p>', 0),
+          ('request_approved', 'Richiesta Approvata', 'La tua richiesta di prenotazione è stata approvata',
+           '<h2>Richiesta Approvata</h2><p>La tua richiesta di prenotazione è stata <strong>approvata</strong>.</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data:</strong> {{date}}</p><p><strong>Ora:</strong> {{start_time}} - {{end_time}}</p><p>{{details}}</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+          ('request_rejected', 'Richiesta Rifiutata', 'La tua richiesta di prenotazione è stata rifiutata',
+           '<h2>Richiesta Rifiutata</h2><p>La tua richiesta di prenotazione è stata <strong>rifiutata</strong>.</p><p><strong>Motivo:</strong> {{rejection_reason}}</p><p><strong>Tipo:</strong> {{request_type}}</p><p><strong>Data richiesta:</strong> {{date}}</p><p>Per ulteriori informazioni, contatta l''amministratore.</p><p>Cordiali saluti,<br>Interview Portal</p>', 0),
+          ('request_counter', 'Controproposta Ricevuta', 'Hai ricevuto una controproposta per la tua richiesta',
+           '<h2>Controproposta Ricevuta</h2><p>L''amministratore ha proposto una modifica alla tua richiesta.</p><p><strong>Proposta originale:</strong> {{original_details}}</p><p><strong>Controproposta:</strong> {{counter_details}}</p><p><strong>Motivo:</strong> {{counter_reason}}</p><p>Accedi al portale per accettare o rifiutare la controproposta.</p>', 0)
+      `, (err) => {});
+    }
+  });
 });
 
 export default db;

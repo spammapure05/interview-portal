@@ -37,6 +37,10 @@ export default function RoomCalendarPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
+  // Viewer request form
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState(false);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -117,6 +121,8 @@ export default function RoomCalendarPage() {
     setFormError("");
     setEditMeeting(null);
     setShowForm(false);
+    setShowRequestForm(false);
+    setRequestSuccess(false);
   };
 
   const openNewMeeting = (day = null) => {
@@ -129,6 +135,47 @@ export default function RoomCalendarPage() {
       setFormRoomId(selectedRoom);
     }
     setShowForm(true);
+  };
+
+  // Apri form richiesta per viewer
+  const openRequestForm = (day = null) => {
+    resetForm();
+    if (day) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      setFormDate(dateStr);
+    }
+    if (selectedRoom !== "all") {
+      setFormRoomId(selectedRoom);
+    }
+    setShowRequestForm(true);
+  };
+
+  // Invia richiesta prenotazione (per viewer)
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormLoading(true);
+
+    const startTime = `${formDate}T${formStartTime}:00`;
+    const endTime = `${formDate}T${formEndTime}:00`;
+
+    const payload = {
+      request_type: "room",
+      room_id: parseInt(formRoomId),
+      meeting_title: formTitle,
+      meeting_description: formDescription || null,
+      requested_start: startTime,
+      requested_end: endTime
+    };
+
+    try {
+      await api.post("/booking-requests", payload);
+      setRequestSuccess(true);
+    } catch (err) {
+      setFormError(err.response?.data?.message || "Errore nell'invio della richiesta");
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const openEditMeeting = (meeting) => {
@@ -289,6 +336,17 @@ export default function RoomCalendarPage() {
             Nuova Riunione
           </button>
         )}
+        {user && user.role === "viewer" && (
+          <button className="btn-primary-modern btn-request" onClick={() => openRequestForm()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Richiedi Prenotazione
+          </button>
+        )}
       </div>
 
       {/* Room Filter */}
@@ -379,6 +437,17 @@ export default function RoomCalendarPage() {
                         <line x1="5" y1="12" x2="19" y2="12"/>
                       </svg>
                       Aggiungi
+                    </button>
+                  )}
+                  {user && user.role === "viewer" && (
+                    <button className="btn-add-meeting btn-request-small" onClick={() => openRequestForm(selectedDay)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                      </svg>
+                      Richiedi
                     </button>
                   )}
                 </div>
@@ -702,6 +771,185 @@ export default function RoomCalendarPage() {
                 Elimina
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Form Modal (per viewer) */}
+      {showRequestForm && (
+        <div className="modal-overlay" onClick={resetForm}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Richiedi Prenotazione Sala</h2>
+              <button className="modal-close" onClick={resetForm}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {requestSuccess ? (
+              <div className="request-success">
+                <div className="success-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <h3>Richiesta Inviata!</h3>
+                <p>La tua richiesta di prenotazione è stata inviata agli amministratori.</p>
+                <p>Riceverai una notifica via email quando sarà processata.</p>
+                <button className="btn-submit" onClick={resetForm}>
+                  Chiudi
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRequestSubmit} className="modern-form">
+                {formError && <div className="form-error">{formError}</div>}
+
+                <div className="request-info-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  <span>La tua richiesta sarà inviata agli amministratori per approvazione.</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    Sala *
+                  </label>
+                  <select
+                    className="form-input"
+                    value={formRoomId}
+                    onChange={e => setFormRoomId(e.target.value)}
+                    required
+                    disabled={formLoading}
+                  >
+                    <option value="">Seleziona una sala</option>
+                    {rooms.map(room => (
+                      <option key={room.id} value={room.id}>
+                        {room.name} {room.capacity ? `(max ${room.capacity} persone)` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="17" y1="10" x2="3" y2="10"/>
+                      <line x1="21" y1="6" x2="3" y2="6"/>
+                      <line x1="21" y1="14" x2="3" y2="14"/>
+                      <line x1="17" y1="18" x2="3" y2="18"/>
+                    </svg>
+                    Titolo Riunione *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={formTitle}
+                    onChange={e => setFormTitle(e.target.value)}
+                    required
+                    disabled={formLoading}
+                    placeholder="Es. Riunione team, Call cliente"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Data *
+                    </label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={formDate}
+                      onChange={e => setFormDate(e.target.value)}
+                      required
+                      disabled={formLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Ora Inizio *
+                    </label>
+                    <input
+                      type="time"
+                      className="form-input"
+                      value={formStartTime}
+                      onChange={e => setFormStartTime(e.target.value)}
+                      required
+                      disabled={formLoading}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Ora Fine *
+                    </label>
+                    <input
+                      type="time"
+                      className="form-input"
+                      value={formEndTime}
+                      onChange={e => setFormEndTime(e.target.value)}
+                      required
+                      disabled={formLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="17" y1="10" x2="3" y2="10"/>
+                      <line x1="21" y1="6" x2="3" y2="6"/>
+                      <line x1="21" y1="14" x2="3" y2="14"/>
+                      <line x1="17" y1="18" x2="3" y2="18"/>
+                    </svg>
+                    Note (opzionale)
+                  </label>
+                  <textarea
+                    className="form-input form-textarea"
+                    value={formDescription}
+                    onChange={e => setFormDescription(e.target.value)}
+                    disabled={formLoading}
+                    rows="3"
+                    placeholder="Argomenti, partecipanti, altre info utili..."
+                  />
+                </div>
+
+                <div className="form-actions-row">
+                  <button type="submit" className="btn-submit" disabled={formLoading}>
+                    {formLoading ? "Invio..." : "Invia Richiesta"}
+                  </button>
+                  <button type="button" className="btn-cancel" onClick={resetForm} disabled={formLoading}>
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

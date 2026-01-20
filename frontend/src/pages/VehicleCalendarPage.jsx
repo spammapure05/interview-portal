@@ -45,6 +45,10 @@ export default function VehicleCalendarPage() {
   const [returnNotes, setReturnNotes] = useState("");
   const [returnLoading, setReturnLoading] = useState(false);
 
+  // Viewer request form
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState(false);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -127,6 +131,8 @@ export default function VehicleCalendarPage() {
     setFormError("");
     setEditBooking(null);
     setShowForm(false);
+    setShowRequestForm(false);
+    setRequestSuccess(false);
   };
 
   const openNewBooking = (day = null) => {
@@ -143,6 +149,51 @@ export default function VehicleCalendarPage() {
       }
     }
     setShowForm(true);
+  };
+
+  // Apri form richiesta per viewer
+  const openRequestForm = (day = null) => {
+    resetForm();
+    if (day) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      setFormDate(dateStr);
+    }
+    if (selectedVehicle !== "all") {
+      setFormVehicleId(selectedVehicle);
+    }
+    setShowRequestForm(true);
+  };
+
+  // Invia richiesta prenotazione (per viewer)
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormLoading(true);
+
+    const startTime = `${formDate}T${formStartTime || "08:00"}:00`;
+    let endTime = null;
+    if (formEndDate && formEndTime) {
+      endTime = `${formEndDate}T${formEndTime}:00`;
+    }
+
+    const payload = {
+      request_type: "vehicle",
+      vehicle_id: parseInt(formVehicleId),
+      driver_name: formDriverName,
+      destination: formDestination || null,
+      purpose: formPurpose || null,
+      requested_start: startTime,
+      requested_end: endTime
+    };
+
+    try {
+      await api.post("/booking-requests", payload);
+      setRequestSuccess(true);
+    } catch (err) {
+      setFormError(err.response?.data?.message || "Errore nell'invio della richiesta");
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const openEditBooking = (booking) => {
@@ -357,6 +408,17 @@ export default function VehicleCalendarPage() {
             Nuova Prenotazione
           </button>
         )}
+        {user && user.role === "viewer" && (
+          <button className="btn-primary-modern btn-request" onClick={() => openRequestForm()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Richiedi Prenotazione
+          </button>
+        )}
       </div>
 
       {/* Vehicle Filter */}
@@ -446,6 +508,17 @@ export default function VehicleCalendarPage() {
                         <line x1="5" y1="12" x2="19" y2="12"/>
                       </svg>
                       Aggiungi
+                    </button>
+                  )}
+                  {user && user.role === "viewer" && (
+                    <button className="btn-add-meeting btn-request-small" onClick={() => openRequestForm(selectedDay)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                      </svg>
+                      Richiedi
                     </button>
                   )}
                 </div>
@@ -934,6 +1007,220 @@ export default function VehicleCalendarPage() {
                 Elimina
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Form Modal (per viewer) */}
+      {showRequestForm && (
+        <div className="modal-overlay" onClick={resetForm}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Richiedi Prenotazione Veicolo</h2>
+              <button className="modal-close" onClick={resetForm}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {requestSuccess ? (
+              <div className="request-success">
+                <div className="success-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <h3>Richiesta Inviata!</h3>
+                <p>La tua richiesta di prenotazione è stata inviata agli amministratori.</p>
+                <p>Riceverai una notifica via email quando sarà processata.</p>
+                <button className="btn-submit" onClick={resetForm}>
+                  Chiudi
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRequestSubmit} className="modern-form">
+                {formError && <div className="form-error">{formError}</div>}
+
+                <div className="request-info-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  <span>La tua richiesta sarà inviata agli amministratori per approvazione.</span>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                        <path d="M15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/>
+                      </svg>
+                      Veicolo *
+                    </label>
+                    <select
+                      className="form-input"
+                      value={formVehicleId}
+                      onChange={e => setFormVehicleId(e.target.value)}
+                      required
+                      disabled={formLoading}
+                    >
+                      <option value="">Seleziona un veicolo</option>
+                      {vehicles.map(vehicle => (
+                        <option key={vehicle.id} value={vehicle.id}>
+                          {vehicle.plate} - {vehicle.brand} {vehicle.model}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      Conducente *
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formDriverName}
+                      onChange={e => setFormDriverName(e.target.value)}
+                      required
+                      disabled={formLoading}
+                      placeholder="Nome e cognome"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      Destinazione
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formDestination}
+                      onChange={e => setFormDestination(e.target.value)}
+                      disabled={formLoading}
+                      placeholder="Es. Milano, cliente ABC"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="17" y1="10" x2="3" y2="10"/>
+                        <line x1="21" y1="6" x2="3" y2="6"/>
+                        <line x1="21" y1="14" x2="3" y2="14"/>
+                        <line x1="17" y1="18" x2="3" y2="18"/>
+                      </svg>
+                      Motivo del viaggio
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formPurpose}
+                      onChange={e => setFormPurpose(e.target.value)}
+                      disabled={formLoading}
+                      placeholder="Es. Visita cliente"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Data partenza *
+                    </label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={formDate}
+                      onChange={e => setFormDate(e.target.value)}
+                      required
+                      disabled={formLoading}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Ora partenza
+                    </label>
+                    <input
+                      type="time"
+                      className="form-input"
+                      value={formStartTime}
+                      onChange={e => setFormStartTime(e.target.value)}
+                      disabled={formLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      Data rientro previsto
+                    </label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={formEndDate}
+                      onChange={e => setFormEndDate(e.target.value)}
+                      disabled={formLoading}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Ora rientro previsto
+                    </label>
+                    <input
+                      type="time"
+                      className="form-input"
+                      value={formEndTime}
+                      onChange={e => setFormEndTime(e.target.value)}
+                      disabled={formLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions-row">
+                  <button type="submit" className="btn-submit" disabled={formLoading}>
+                    {formLoading ? "Invio..." : "Invia Richiesta"}
+                  </button>
+                  <button type="button" className="btn-cancel" onClick={resetForm} disabled={formLoading}>
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node -e:*)",
-      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\quasar\\\\source\\\\repos\\\\interview-portal\\\\backend''; node -e \"\"import db from ''./db.js''; db.all\\(''SELECT id, email, role FROM users'', [], \\(err, rows\\) => { if\\(err\\) console.error\\(err\\); else console.table\\(rows\\); }\\);\"\"\")"
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\quasar\\\\source\\\\repos\\\\interview-portal\\\\backend''; node -e \"\"import db from ''./db.js''; db.all\\(''SELECT id, email, role FROM users'', [], \\(err, rows\\) => { if\\(err\\) console.error\\(err\\); else console.table\\(rows\\); }\\);\"\"\")",
+      "Bash(npm install:*)"
     ]
   }
 }

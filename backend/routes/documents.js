@@ -29,19 +29,45 @@ const storage = multer.diskStorage({
   }
 });
 
+// Mappa MIME type -> estensioni permesse
+const allowedMimeExtensions = {
+  "application/pdf": [".pdf"],
+  "application/msword": [".doc"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"]
+};
+
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "image/jpeg",
-    "image/png"
-  ];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Tipo file non supportato. Usa PDF, DOC, DOCX, JPG o PNG."), false);
+  const allowedTypes = Object.keys(allowedMimeExtensions);
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  // Verifica MIME type
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error("Tipo file non supportato. Usa PDF, DOC, DOCX, JPG o PNG."), false);
   }
+
+  // Verifica che l'estensione corrisponda al MIME type dichiarato
+  const validExtensions = allowedMimeExtensions[file.mimetype];
+  if (!validExtensions.includes(ext)) {
+    return cb(new Error("Estensione file non corrispondente al tipo. Possibile file manipolato."), false);
+  }
+
+  // Blocca nomi file con path traversal
+  if (file.originalname.includes("..") || file.originalname.includes("/") || file.originalname.includes("\\")) {
+    return cb(new Error("Nome file non valido."), false);
+  }
+
+  // Blocca file con doppia estensione sospetta (es. file.pdf.exe)
+  const suspiciousExts = [".exe", ".bat", ".cmd", ".sh", ".ps1", ".vbs", ".js", ".msi", ".com", ".scr"];
+  const lowerName = file.originalname.toLowerCase();
+  for (const suspExt of suspiciousExts) {
+    if (lowerName.includes(suspExt)) {
+      return cb(new Error("Tipo file non permesso per motivi di sicurezza."), false);
+    }
+  }
+
+  cb(null, true);
 };
 
 const upload = multer({

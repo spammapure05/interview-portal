@@ -4,6 +4,27 @@ import { requireRole } from "../rolesMiddleware.js";
 
 const router = express.Router();
 
+// Helper per sanitizzare input per prevenire email header injection
+function sanitizeForEmail(str) {
+  if (!str) return "";
+  // Rimuove caratteri che potrebbero essere usati per header injection
+  return String(str)
+    .replace(/[\r\n]/g, " ")       // Rimuove newlines (header injection)
+    .replace(/[<>]/g, "")          // Rimuove < > (HTML injection base)
+    .trim();
+}
+
+// Helper per escape HTML base (per template email)
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 // Helper per inviare notifiche email
 async function sendNotificationEmail(templateType, recipientEmail, recipientName, variables, ccEmail = null) {
   return new Promise((resolve, reject) => {
@@ -34,14 +55,16 @@ async function sendNotificationEmail(templateType, recipientEmail, recipientName
             } : undefined
           });
 
-          // Replace variables in template
+          // Replace variables in template con sanitizzazione
           let subject = template.subject;
           let body = template.body;
 
           for (const [key, value] of Object.entries(variables)) {
             const regex = new RegExp(`{{${key}}}`, 'g');
-            subject = subject.replace(regex, value || '');
-            body = body.replace(regex, value || '');
+            // Sanitizza subject per prevenire header injection
+            subject = subject.replace(regex, sanitizeForEmail(value) || '');
+            // Escape HTML nel body per prevenire XSS
+            body = body.replace(regex, escapeHtml(value) || '');
           }
 
           const mailOptions = {

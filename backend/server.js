@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
@@ -24,22 +26,90 @@ import exportRoutes from "./routes/export.js";
 import bookingRequestsRoutes from "./routes/bookingRequests.js";
 import { startNotificationScheduler } from "./services/emailService.js";
 
+// ===== SECURITY: Verifica JWT_SECRET obbligatorio =====
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "supersecret" || process.env.JWT_SECRET === "supersecretcambialo") {
+  console.error("ERRORE CRITICO: JWT_SECRET non configurato o insicuro!");
+  console.error("Imposta una chiave sicura nel file .env (almeno 32 caratteri casuali)");
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(cors());
-app.use(express.json());
+// ===== SECURITY HEADERS con Helmet =====
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false // necessario per alcune funzionalità frontend
+}));
+
+// ===== CORS con whitelist =====
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(o => o.trim())
+  : ["http://localhost:3000", "http://localhost:4000", "http://127.0.0.1:3000", "http://127.0.0.1:4000"];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Permetti richieste senza origin (es. Postman, app mobile, stesso server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // In produzione, blocca origin non autorizzati
+    if (process.env.NODE_ENV === "production") {
+      return callback(new Error("CORS non autorizzato"), false);
+    }
+    // In sviluppo, permetti ma logga
+    console.warn(`CORS warning: origin ${origin} non in whitelist`);
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
+// ===== RATE LIMITING =====
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuti
+  max: 500, // limite generale per IP
+  message: { message: "Troppe richieste, riprova più tardi" },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuti
+  max: 10, // max 10 tentativi login per IP
+  message: { message: "Troppi tentativi di login, riprova tra 15 minuti" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true // non conta i login riusciti
+});
+
+app.use("/api", generalLimiter);
+
+// ===== BODY SIZE LIMIT =====
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // ===== ROTTE PUBBLICHE (senza autenticazione) =====
 
 // Health check
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-// Login - PUBBLICA
-app.post("/api/auth/login", (req, res) => {
+// Login - PUBBLICA (con rate limiting specifico)
+app.post("/api/auth/login", loginLimiter, (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
@@ -61,7 +131,7 @@ app.post("/api/auth/login", (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || "supersecret",
+      process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
 

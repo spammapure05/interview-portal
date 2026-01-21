@@ -8,7 +8,8 @@ export function authMiddleware(req, res, next) {
   if (!token) return res.status(401).json({ message: "Token mancante" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "supersecret");
+    // JWT_SECRET è già validato all'avvio del server
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // { id, email, role }
     next();
   } catch (err) {

@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db.js";
 import { logAudit } from "./audit.js";
 import { sendEmail, getTemplate, processTemplate } from "../services/emailService.js";
+import { externalRoomBookingTemplate } from "../services/emailTemplates.js";
 
 const router = express.Router();
 
@@ -195,24 +196,17 @@ async function sendExternalBookingEmail(meeting, room, type = "room") {
     const endDate = new Date(meeting.end_time);
 
     const subject = `Prenotazione Sala: ${meeting.title} - ${room.name}`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3B82F6;">Prenotazione Sala Confermata</h2>
-        <p>Ti informiamo che è stata effettuata una prenotazione a tuo nome.</p>
 
-        <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #1e293b;">${meeting.title}</h3>
-          <p><strong>Sala:</strong> ${room.name}</p>
-          <p><strong>Data:</strong> ${startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
-          <p><strong>Orario:</strong> ${startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })} - ${endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>
-          ${meeting.organizer ? `<p><strong>Organizzatore:</strong> ${meeting.organizer}</p>` : ""}
-          ${meeting.description ? `<p><strong>Note:</strong> ${meeting.description}</p>` : ""}
-        </div>
-
-        <p style="color: #64748b; font-size: 14px;">Questa prenotazione è stata effettuata dalla segreteria/amministrazione.</p>
-        <p style="color: #64748b; font-size: 14px;">Cordiali saluti,<br>Interview Portal</p>
-      </div>
-    `;
+    // Usa il template professionale
+    const html = externalRoomBookingTemplate({
+      title: meeting.title,
+      room_name: room.name,
+      date: startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+      start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      end_time: endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      organizer: meeting.organizer || null,
+      description: meeting.description || null
+    });
 
     await sendEmail(meeting.external_email, subject, html);
     console.log(`Email inviata a ${meeting.external_email} per prenotazione sala`);

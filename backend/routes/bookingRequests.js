@@ -4,6 +4,21 @@ import { requireRole } from "../rolesMiddleware.js";
 
 const router = express.Router();
 
+// Helper per ottenere l'URL base dell'applicazione
+function getAppUrl() {
+  return process.env.APP_URL || "http://localhost:3000";
+}
+
+// Helper per generare URL per le azioni sulle richieste
+function getRequestActionUrl(requestId, role) {
+  const baseUrl = getAppUrl();
+  // Admin/Secretary vedono la pagina gestione richieste, viewer la propria lista
+  if (role === "admin" || role === "secretary") {
+    return `${baseUrl}/admin/requests?highlight=${requestId}`;
+  }
+  return `${baseUrl}/my-requests?highlight=${requestId}`;
+}
+
 // Helper per sanitizzare input per prevenire email header injection
 function sanitizeForEmail(str) {
   if (!str) return "";
@@ -108,25 +123,29 @@ function getAdminAndSecretaryEmails() {
 }
 
 // Helper per inviare notifica a tutti admin e segreteria
-async function notifyAllStaff(templateType, variables, requesterEmailAsCC = null) {
+async function notifyAllStaff(templateType, variables, requesterEmailAsCC = null, requestId = null) {
   const { admins, secretaries } = await getAdminAndSecretaryEmails();
   const allStaff = [...admins, ...secretaries];
 
   for (const email of allStaff) {
-    await sendNotificationEmail(templateType, email, "Staff", variables, requesterEmailAsCC);
+    // Aggiungi action_url per admin/secretary
+    const varsWithUrl = requestId ? { ...variables, action_url: getRequestActionUrl(requestId, "admin") } : variables;
+    await sendNotificationEmail(templateType, email, "Staff", varsWithUrl, requesterEmailAsCC);
   }
 }
 
 // Helper per inviare notifica al richiedente e alle segreterie
-async function notifyRequesterAndSecretaries(templateType, requesterEmail, requesterName, variables) {
+async function notifyRequesterAndSecretaries(templateType, requesterEmail, requesterName, variables, requestId = null) {
   const { secretaries } = await getAdminAndSecretaryEmails();
 
-  // Email al richiedente
-  await sendNotificationEmail(templateType, requesterEmail, requesterName, variables);
+  // Email al richiedente con action_url per viewer
+  const varsForRequester = requestId ? { ...variables, action_url: getRequestActionUrl(requestId, "viewer") } : variables;
+  await sendNotificationEmail(templateType, requesterEmail, requesterName, varsForRequester);
 
-  // Email a tutte le segreterie
+  // Email a tutte le segreterie con action_url per secretary
   for (const secEmail of secretaries) {
-    await sendNotificationEmail(templateType, secEmail, "Segreteria", variables);
+    const varsForSecretary = requestId ? { ...variables, action_url: getRequestActionUrl(requestId, "secretary") } : variables;
+    await sendNotificationEmail(templateType, secEmail, "Segreteria", varsForSecretary);
   }
 }
 
@@ -276,7 +295,7 @@ router.post("/", (req, res) => {
         start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
         end_time: requested_end ? new Date(requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
         details: request_type === "room" ? `Titolo: ${meeting_title || "N/A"}` : `Destinazione: ${destination || "N/A"}`
-      }, req.user.email); // CC al richiedente
+      }, req.user.email, requestId); // CC al richiedente
 
       res.status(201).json({
         message: "Richiesta inviata con successo",
@@ -335,7 +354,7 @@ router.put("/:id/approve", requireRole("admin"), (req, res) => {
           end_time: request.requested_end ? new Date(request.requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
           details: request.request_type === "room" ? `Sala: ${request.meeting_title || "N/A"}` : `Veicolo per: ${request.destination || "N/A"}`,
           requester_name: request.requester_name || request.requester_email
-        });
+        }, parseInt(req.params.id));
 
         res.json({ message: "Richiesta approvata" });
       }
@@ -377,7 +396,7 @@ router.put("/:id/reject", requireRole("admin"), (req, res) => {
           date: startDate.toLocaleDateString("it-IT"),
           rejection_reason: rejection_reason,
           requester_name: request.requester_name || request.requester_email
-        });
+        }, parseInt(req.params.id));
 
         res.json({ message: "Richiesta rifiutata" });
       }
@@ -442,7 +461,7 @@ router.put("/:id/counter", requireRole("admin"), (req, res) => {
           counter_details: `${counterDate.toLocaleDateString("it-IT")} alle ${counterDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`,
           counter_reason: counter_reason,
           requester_name: request.requester_name || request.requester_email
-        });
+        }, parseInt(req.params.id));
 
         res.json({ message: "Controproposta inviata" });
       }
@@ -498,7 +517,7 @@ router.put("/:id/accept-counter", (req, res) => {
           start_time: counterDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
           end_time: request.counter_end ? new Date(request.counter_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
           details: `Controproposta accettata - ${request.request_type === "room" ? `Titolo: ${request.meeting_title || "N/A"}` : `Destinazione: ${request.destination || "N/A"}`}`
-        }, null);
+        }, null, parseInt(req.params.id));
 
         res.json({ message: "Controproposta accettata" });
       }
@@ -534,7 +553,7 @@ router.put("/:id/reject-counter", (req, res) => {
           request_type: request.request_type === "room" ? "Sala riunioni" : "Veicolo",
           date: origDate.toLocaleDateString("it-IT"),
           rejection_reason: `La controproposta è stata rifiutata dall'utente. La richiesta originale era per ${origDate.toLocaleDateString("it-IT")} alle ${origDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}.`
-        }, null);
+        }, null, parseInt(req.params.id));
 
         res.json({ message: "Controproposta rifiutata" });
       }

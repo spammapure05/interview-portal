@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db.js";
 import { logAudit } from "./audit.js";
 import { sendEmail } from "../services/emailService.js";
+import { externalVehicleBookingTemplate } from "../services/emailTemplates.js";
 
 const router = express.Router();
 
@@ -14,27 +15,21 @@ async function sendExternalVehicleBookingEmail(booking, vehicle) {
     const endDate = booking.end_time ? new Date(booking.end_time) : null;
 
     const subject = `Prenotazione Veicolo: ${vehicle.brand} ${vehicle.model} (${vehicle.plate})`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #F59E0B;">Prenotazione Veicolo Confermata</h2>
-        <p>Ti informiamo che è stata effettuata una prenotazione veicolo a tuo nome.</p>
 
-        <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #1e293b;">${vehicle.brand} ${vehicle.model}</h3>
-          <p><strong>Targa:</strong> ${vehicle.plate}</p>
-          <p><strong>Conducente:</strong> ${booking.driver_name}</p>
-          <p><strong>Data partenza:</strong> ${startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
-          <p><strong>Ora partenza:</strong> ${startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>
-          ${endDate ? `<p><strong>Rientro previsto:</strong> ${endDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} alle ${endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</p>` : ""}
-          ${booking.destination ? `<p><strong>Destinazione:</strong> ${booking.destination}</p>` : ""}
-          ${booking.purpose ? `<p><strong>Motivo:</strong> ${booking.purpose}</p>` : ""}
-          ${booking.km_start ? `<p><strong>Km alla partenza:</strong> ${booking.km_start.toLocaleString()} km</p>` : ""}
-        </div>
-
-        <p style="color: #64748b; font-size: 14px;">Questa prenotazione è stata effettuata dalla segreteria/amministrazione.</p>
-        <p style="color: #64748b; font-size: 14px;">Cordiali saluti,<br>Interview Portal</p>
-      </div>
-    `;
+    // Usa il template professionale
+    const html = externalVehicleBookingTemplate({
+      brand: vehicle.brand,
+      model: vehicle.model,
+      plate: vehicle.plate,
+      driver_name: booking.driver_name,
+      start_date: startDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+      start_time: startDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      end_date: endDate ? endDate.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : null,
+      end_time: endDate ? endDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : null,
+      destination: booking.destination || null,
+      purpose: booking.purpose || null,
+      km_start: booking.km_start || null
+    });
 
     await sendEmail(booking.external_email, subject, html);
     console.log(`Email inviata a ${booking.external_email} per prenotazione veicolo`);

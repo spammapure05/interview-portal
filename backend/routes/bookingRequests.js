@@ -1,6 +1,7 @@
 import express from "express";
 import db from "../db.js";
 import { requireRole } from "../rolesMiddleware.js";
+import { createNotification, notifyByRole } from "./notifications.js";
 
 const router = express.Router();
 
@@ -132,10 +133,26 @@ async function notifyAllStaff(templateType, variables, requesterEmailAsCC = null
     const varsWithUrl = requestId ? { ...variables, action_url: getRequestActionUrl(requestId, "admin") } : variables;
     await sendNotificationEmail(templateType, email, "Staff", varsWithUrl, requesterEmailAsCC);
   }
+
+  // Crea notifiche in-app per admin e segreteria
+  const notificationTitles = {
+    request_submitted: "Nuova Richiesta",
+    request_approved: "Richiesta Approvata",
+    request_rejected: "Richiesta Rifiutata"
+  };
+  const title = notificationTitles[templateType] || "Notifica";
+  const message = `${variables.requester_name || "Un utente"} - ${variables.request_type || "Prenotazione"} per ${variables.date || "data non specificata"}`;
+  const link = requestId ? `/admin/requests?highlight=${requestId}` : "/admin/requests";
+
+  try {
+    await notifyByRole(["admin", "secretary"], templateType, title, message, link);
+  } catch (e) {
+    console.error("Errore creazione notifica in-app:", e);
+  }
 }
 
 // Helper per inviare notifica al richiedente e alle segreterie
-async function notifyRequesterAndSecretaries(templateType, requesterEmail, requesterName, variables, requestId = null) {
+async function notifyRequesterAndSecretaries(templateType, requesterEmail, requesterName, variables, requestId = null, requesterId = null) {
   const { secretaries } = await getAdminAndSecretaryEmails();
 
   // Email al richiedente con action_url per viewer
@@ -146,6 +163,37 @@ async function notifyRequesterAndSecretaries(templateType, requesterEmail, reque
   for (const secEmail of secretaries) {
     const varsForSecretary = requestId ? { ...variables, action_url: getRequestActionUrl(requestId, "secretary") } : variables;
     await sendNotificationEmail(templateType, secEmail, "Segreteria", varsForSecretary);
+  }
+
+  // Crea notifica in-app per il richiedente
+  if (requesterId) {
+    const notificationTitles = {
+      request_approved: "Richiesta Approvata",
+      request_rejected: "Richiesta Rifiutata",
+      request_counter: "Controproposta Ricevuta"
+    };
+    const title = notificationTitles[templateType] || "Aggiornamento Richiesta";
+    const message = templateType === "request_approved"
+      ? `La tua richiesta per ${variables.request_type || "prenotazione"} del ${variables.date || ""} è stata approvata`
+      : templateType === "request_rejected"
+        ? `La tua richiesta per ${variables.request_type || "prenotazione"} è stata rifiutata`
+        : `Hai ricevuto una controproposta per la tua richiesta`;
+    const link = requestId ? `/my-requests?highlight=${requestId}` : "/my-requests";
+
+    try {
+      await createNotification(requesterId, templateType, title, message, link);
+    } catch (e) {
+      console.error("Errore creazione notifica in-app per richiedente:", e);
+    }
+  }
+
+  // Notifica anche le segreterie in-app
+  try {
+    await notifyByRole(["secretary"], templateType, "Aggiornamento Richiesta",
+      `${requesterName}: ${variables.request_type || "Prenotazione"}`,
+      requestId ? `/admin/requests?highlight=${requestId}` : "/admin/requests");
+  } catch (e) {
+    console.error("Errore notifica segreterie:", e);
   }
 }
 
@@ -354,7 +402,7 @@ router.put("/:id/approve", requireRole("admin"), (req, res) => {
           end_time: request.requested_end ? new Date(request.requested_end).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "N/A",
           details: request.request_type === "room" ? `Sala: ${request.meeting_title || "N/A"}` : `Veicolo per: ${request.destination || "N/A"}`,
           requester_name: request.requester_name || request.requester_email
-        }, parseInt(req.params.id));
+        }, parseInt(req.params.id), request.requester_id);
 
         res.json({ message: "Richiesta approvata" });
       }
@@ -396,7 +444,7 @@ router.put("/:id/reject", requireRole("admin"), (req, res) => {
           date: startDate.toLocaleDateString("it-IT"),
           rejection_reason: rejection_reason,
           requester_name: request.requester_name || request.requester_email
-        }, parseInt(req.params.id));
+        }, parseInt(req.params.id), request.requester_id);
 
         res.json({ message: "Richiesta rifiutata" });
       }
@@ -461,7 +509,7 @@ router.put("/:id/counter", requireRole("admin"), (req, res) => {
           counter_details: `${counterDate.toLocaleDateString("it-IT")} alle ${counterDate.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`,
           counter_reason: counter_reason,
           requester_name: request.requester_name || request.requester_email
-        }, parseInt(req.params.id));
+        }, parseInt(req.params.id), request.requester_id);
 
         res.json({ message: "Controproposta inviata" });
       }

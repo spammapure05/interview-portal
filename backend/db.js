@@ -445,6 +445,38 @@ db.serialize(() => {
       `, [requestSubmittedHtml2, requestApprovedHtml2, requestRejectedHtml2, requestCounterHtml2], (err) => {});
     }
   });
+
+  // ===== NOTIFICHE IN-APP =====
+  db.run(`
+    CREATE TABLE IF NOT EXISTS in_app_notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      link TEXT,
+      read INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `);
+
+  // Indice per query veloci sulle notifiche non lette
+  db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON in_app_notifications(user_id, read)`);
+
+  // ===== PREFERENZE UTENTE =====
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER UNIQUE NOT NULL,
+      theme TEXT DEFAULT 'light' CHECK(theme IN ('light', 'dark', 'system')),
+      saved_filters TEXT,
+      notifications_enabled INTEGER DEFAULT 1,
+      email_notifications INTEGER DEFAULT 1,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `);
 });
 
 export default db;

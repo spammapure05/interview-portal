@@ -24,6 +24,8 @@ import settingsRoutes from "./routes/settings.js";
 import searchRoutes from "./routes/search.js";
 import exportRoutes from "./routes/export.js";
 import bookingRequestsRoutes from "./routes/bookingRequests.js";
+import notificationsRoutes from "./routes/notifications.js";
+import userPreferencesRoutes from "./routes/userPreferences.js";
 import { startNotificationScheduler } from "./services/emailService.js";
 
 // ===== SECURITY: Verifica JWT_SECRET obbligatorio =====
@@ -145,6 +147,8 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/booking-requests", bookingRequestsRoutes);
+app.use("/api/notifications", notificationsRoutes);
+app.use("/api/preferences", userPreferencesRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../authContext";
 import GlobalSearch from "./GlobalSearch";
+import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 import api from "../api";
 
 export default function Layout() {
@@ -328,6 +330,8 @@ export default function Layout() {
         {user && (
           <div className="app-header-right">
             <GlobalSearch />
+            <ThemeToggle />
+            <NotificationBell />
             <div className="user-pill">
               <div className="user-avatar">
                 {user.email.charAt(0).toUpperCase()}

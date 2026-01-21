@@ -40,42 +40,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ===== SECURITY HEADERS con Helmet =====
+// Nota: CSP disabilitata perché React in produzione usa script inline
+// Per abilitarla, serve configurare React con nonce o hash degli script
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      frameAncestors: ["'none'"]
-    }
-  },
-  crossOriginEmbedderPolicy: false // necessario per alcune funzionalità frontend
+  contentSecurityPolicy: false, // Disabilitata per compatibilità con React build
+  crossOriginEmbedderPolicy: false
 }));
 
-// ===== CORS con whitelist =====
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",").map(o => o.trim())
-  : ["http://localhost:3000", "http://localhost:4000", "http://127.0.0.1:3000", "http://127.0.0.1:4000"];
-
+// ===== CORS =====
+// In un deploy single-container (frontend servito dallo stesso server),
+// le richieste API sono same-origin quindi CORS non è un problema.
+// Permettiamo comunque richieste cross-origin per flessibilità.
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permetti richieste senza origin (es. Postman, app mobile, stesso server)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // In produzione, blocca origin non autorizzati
-    if (process.env.NODE_ENV === "production") {
-      return callback(new Error("CORS non autorizzato"), false);
-    }
-    // In sviluppo, permetti ma logga
-    console.warn(`CORS warning: origin ${origin} non in whitelist`);
-    return callback(null, true);
-  },
+  origin: true, // Permette tutte le origin (sicuro perché l'auth è via JWT)
   credentials: true
 }));
 

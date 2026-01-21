@@ -426,7 +426,6 @@ input[type="password"]:focus {
   position: sticky;
   top: 0;
   z-index: 100;
-  overflow: hidden;
 }
 
 .app-header-left {
@@ -484,6 +483,7 @@ input[type="password"]:focus {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 /* User Menu Container */

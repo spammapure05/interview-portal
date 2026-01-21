@@ -15,6 +15,13 @@ export function useSavedFilters(pageKey, defaultFilters = {}) {
   // Carica filtri salvati dal server
   useEffect(() => {
     const loadSavedFilters = async () => {
+      // Solo se c'è un token (utente loggato)
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const res = await api.get("/preferences");
         if (res.data.saved_filters && res.data.saved_filters[pageKey]) {
@@ -134,6 +141,10 @@ export function useSavedFilters(pageKey, defaultFilters = {}) {
   // Salva i filtri correnti come "ultimo usato" quando cambiano
   useEffect(() => {
     if (isLoading) return;
+
+    // Solo se c'è un token (utente loggato)
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
     const saveLastActive = async () => {
       try {

@@ -49,6 +49,10 @@ export function ThemeProvider({ children }) {
   // Fetch theme from server on mount (if logged in)
   useEffect(() => {
     const fetchTheme = async () => {
+      // Solo se c'è un token (utente loggato)
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
       try {
         const res = await api.get("/preferences");
         if (res.data.theme) {
@@ -67,7 +71,10 @@ export function ThemeProvider({ children }) {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
 
-    // Sync to server
+    // Sync to server (solo se loggato)
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     try {
       await api.patch("/preferences/theme", { theme: newTheme });
     } catch (err) {

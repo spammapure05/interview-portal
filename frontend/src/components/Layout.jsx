@@ -11,7 +11,9 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const userMenuRef = useRef(null);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   const handleLogout = () => {
@@ -34,6 +36,9 @@ export default function Layout() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpenDropdown(null);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -42,6 +47,7 @@ export default function Layout() {
   // Close dropdown on route change
   useEffect(() => {
     setOpenDropdown(null);
+    setUserMenuOpen(false);
   }, [location.pathname]);
 
   // Fetch pending requests count for admin badge
@@ -332,25 +338,49 @@ export default function Layout() {
             <GlobalSearch />
             <ThemeToggle />
             <NotificationBell />
-            <div className="user-pill">
-              <div className="user-avatar">
-                {user.email.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-info">
-                <span className="user-email">{user.email}</span>
-                <span className={`user-role role-${user.role}`}>
-                  {user.role === "admin" ? "Admin" : user.role === "viewer" ? "Viewer" : "Segreteria"}
-                </span>
-              </div>
+            <div className="user-menu-container" ref={userMenuRef}>
+              <button
+                className={`user-pill ${userMenuOpen ? "open" : ""}`}
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <div className="user-avatar">
+                  {user.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="user-info">
+                  <span className="user-email">{user.email}</span>
+                  <span className={`user-role role-${user.role}`}>
+                    {user.role === "admin" ? "Admin" : user.role === "viewer" ? "Viewer" : "Segreteria"}
+                  </span>
+                </div>
+                <svg className="user-menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              {userMenuOpen && (
+                <div className="user-dropdown-menu">
+                  <div className="user-dropdown-header">
+                    <div className="user-dropdown-avatar">
+                      {user.email.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="user-dropdown-info">
+                      <span className="user-dropdown-email">{user.email}</span>
+                      <span className={`user-dropdown-role role-${user.role}`}>
+                        {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="user-dropdown-divider"></div>
+                  <button className="user-dropdown-item logout-item" onClick={handleLogout}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Esci
+                  </button>
+                </div>
+              )}
             </div>
-            <button className="logout-btn" onClick={handleLogout}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span>Logout</span>
-            </button>
           </div>
         )}
       </header>

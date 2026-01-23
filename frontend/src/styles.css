@@ -439,7 +439,7 @@ input[type="password"]:focus {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f4f8 0%, #f8fafc 100%);
+  background: var(--bg-main);
 }
 
 .app-header {
@@ -447,10 +447,10 @@ input[type="password"]:focus {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -524,8 +524,8 @@ input[type="password"]:focus {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.4rem 0.6rem 0.4rem 0.4rem;
   cursor: pointer;
@@ -533,12 +533,12 @@ input[type="password"]:focus {
 }
 
 .user-pill:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.12);
+  background: var(--bg-lighter);
+  border-color: var(--border);
 }
 
 .user-pill.open {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
   border-color: var(--primary);
 }
 
@@ -736,12 +736,11 @@ input[type="password"]:focus {
 /* ============================================ */
 
 .card {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06),
-              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   margin-bottom: 1.5rem;
@@ -749,8 +748,7 @@ input[type="password"]:focus {
 }
 
 .card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1),
-              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -1949,11 +1947,12 @@ button:disabled {
 .search-bar input {
   flex: 1;
   padding: 0.75rem 1.2rem !important;
-  border: 1px solid rgba(79, 70, 229, 0.2) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.7) !important;
+  background: var(--bg-card) !important;
   font-weight: 500;
   font-size: 0.95rem;
+  color: var(--text-primary);
 }
 
 .search-bar input::placeholder {
@@ -1970,9 +1969,9 @@ button:disabled {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--bg-light);
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
 }
 
 .filter-label {
@@ -1988,8 +1987,8 @@ button:disabled {
   padding: 0.65rem 1rem !important;
   border-radius: 10px !important;
   font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(79, 70, 229, 0.15) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
   color: var(--text-primary);
 }
 
@@ -2710,10 +2709,10 @@ button:disabled {
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
@@ -3060,9 +3059,9 @@ button:disabled {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   text-decoration: none;
   transition: all 0.3s ease;
@@ -3158,17 +3157,17 @@ button:disabled {
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .recent-item:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-light);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-color: rgba(79, 70, 229, 0.15);
+  border-color: var(--primary);
 }
 
 .recent-item-link {
@@ -3425,7 +3424,7 @@ button:disabled {
   border: 2px solid var(--border);
   border-radius: 12px;
   font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   transition: all 0.2s ease;
 }
 
@@ -3469,7 +3468,7 @@ button:disabled {
   border: 2px solid var(--border);
   border-radius: 12px;
   font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   min-width: 180px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3495,9 +3494,9 @@ button:disabled {
 /* ============================================ */
 
 .form-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(10px);
   overflow: hidden;
@@ -3508,8 +3507,8 @@ button:disabled {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(37, 99, 235, 0.08));
-  border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
 }
 
 .form-icon {
@@ -3723,9 +3722,9 @@ button:disabled {
 }
 
 .interview-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   padding: 1.25rem;
   display: flex;
@@ -3866,7 +3865,7 @@ button:disabled {
 .empty-state-modern {
   text-align: center;
   padding: 4rem 2rem;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--bg-light);
   border-radius: 16px;
   border: 1px dashed var(--border);
 }
@@ -3912,9 +3911,9 @@ button:disabled {
 }
 
 .candidate-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   padding: 1.25rem;
   text-decoration: none;
@@ -4090,9 +4089,9 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
@@ -4176,9 +4175,9 @@ button:disabled {
 }
 
 .detail-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
@@ -4188,8 +4187,8 @@ button:disabled {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(37, 99, 235, 0.08));
-  border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
 }
 
 .detail-card-header svg {
@@ -4248,9 +4247,9 @@ button:disabled {
 }
 
 .interview-detail-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
@@ -4260,8 +4259,8 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.03), rgba(37, 99, 235, 0.05));
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
 }
 
 .interview-detail-datetime {
@@ -4418,7 +4417,7 @@ button:disabled {
 .empty-state-compact {
   text-align: center;
   padding: 3rem 2rem;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--bg-light);
   border-radius: 16px;
   border: 1px dashed var(--border);
 }
@@ -4886,8 +4885,8 @@ button:disabled {
   gap: 0.5rem;
   padding: 1rem;
   border-radius: 12px;
-  border: 2px solid rgba(0,0,0,0.08);
-  background: rgba(255,255,255,0.5);
+  border: 2px solid var(--border);
+  background: var(--bg-card);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -5147,7 +5146,7 @@ button:disabled {
 }
 
 .view-toggle-btn:hover {
-  background: rgba(255,255,255,0.8);
+  background: var(--bg-lighter);
 }
 
 .view-toggle-btn:hover svg {
@@ -9585,9 +9584,9 @@ button:disabled {
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
 }
 
 .requests-filter-btn {
@@ -11092,5 +11091,89 @@ button:disabled {
   background: rgba(15, 23, 42, 0.8);
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--text-muted);
+}
+
+.dark-theme .login-card .btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.dark-theme .login-card .btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+/* ============================================ */
+/* DARK MODE - CARD & COMPONENT BACKGROUNDS    */
+/* ============================================ */
+
+/* All card-like components with rgba white backgrounds */
+.dark-theme .card,
+.dark-theme .form-card,
+.dark-theme .detail-card,
+.dark-theme .interview-card-modern,
+.dark-theme .candidate-card-modern,
+.dark-theme .interview-detail-card,
+.dark-theme .action-card,
+.dark-theme .recent-item {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.dark-theme .recent-item:hover {
+  background: var(--bg-lighter);
+}
+
+/* Header and navigation elements */
+.dark-theme .user-pill {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark-theme .user-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark-theme .user-pill.open {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Form inputs with rgba backgrounds */
+.dark-theme .form-input,
+.dark-theme .form-select,
+.dark-theme .form-textarea {
+  background: var(--bg-input);
+  border-color: var(--border);
+}
+
+/* Empty states */
+.dark-theme .empty-state-modern {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border);
+}
+
+/* View toggle */
+.dark-theme .view-toggle-btn:hover {
+  background: var(--bg-lighter);
+}
+
+.dark-theme .view-toggle-btn.active {
+  background: var(--bg-card);
+}
+
+/* Suitability option */
+.dark-theme .suitability-option {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+/* Detail headers */
+.dark-theme .detail-header {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+/* Filter section backgrounds */
+.dark-theme .filters-section {
+  background: var(--bg-card);
+  border-color: var(--border);
 }
 

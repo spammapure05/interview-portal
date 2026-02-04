@@ -62,13 +62,14 @@ export default function LoginPage() {
         <div className={`login-content ${loginSuccess ? "content-hidden" : ""}`}>
           <div className="login-brand">
             <div className="login-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+              <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <rect width="64" height="64" rx="14" fill="#1e3a5f"/>
+                <rect x="29" y="8" width="2.5" height="48" rx="1.25" fill="#7cb342"/>
+                <text x="32" y="38" textAnchor="middle" fontFamily="Georgia, 'Times New Roman', serif" fontWeight="700" fontSize="18" fill="#c2d4e6" letterSpacing="1">DCS</text>
               </svg>
             </div>
-            <div className="login-logo">Interview Portal</div>
-            <div className="login-tag">Gestisci candidati e colloqui</div>
+            <div className="login-logo">DCS Group</div>
+            <div className="login-tag">Interview Portal</div>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit}>

@@ -1263,22 +1263,20 @@ button:disabled {
 }
 
 .login-icon {
-  width: 60px;
-  height: 60px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto 1rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
   animation: pulse 3s ease-in-out infinite;
 }
 
 .login-icon svg {
-  width: 30px;
-  height: 30px;
-  color: white;
+  width: 72px;
+  height: 72px;
 }
 
 .login-logo {
@@ -2447,18 +2445,17 @@ button:disabled {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .logo-icon svg {
-  width: 22px;
-  height: 22px;
-  color: white;
+  width: 40px;
+  height: 40px;
 }
 
 .main-nav {

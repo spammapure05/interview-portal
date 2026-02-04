@@ -486,7 +486,12 @@ export default function CandidateDetailPage() {
             </div>
             <div className="modal-body">
               <p>Sei sicuro di voler eliminare il candidato <strong>{candidate.last_name} {candidate.first_name}</strong>?</p>
-              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Questa azione è irreversibile. Verranno eliminati anche tutti i documenti associati.</p>
+              {interviews.length > 0 && (
+                <div className="alert alert-warning" style={{ marginTop: "0.75rem" }}>
+                  <strong>Attenzione:</strong> questo candidato ha {interviews.length} colloqui{interviews.length === 1 ? "o" : ""} associat{interviews.length === 1 ? "o" : "i"} che verr{interviews.length === 1 ? "à" : "anno"} eliminat{interviews.length === 1 ? "o" : "i"}.
+                </div>
+              )}
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Questa azione è irreversibile. Verranno eliminati anche tutti i documenti e colloqui associati.</p>
               {deleteError && (
                 <div className="alert alert-danger" style={{ marginTop: "0.75rem" }}>
                   {deleteError}

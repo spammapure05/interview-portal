@@ -149,24 +149,18 @@ router.patch('/:id/suitability', requireRole('admin'), (req, res) => {
 router.delete('/:id', requireRole('admin'), (req, res) => {
   const { id } = req.params;
 
-  // Prima verifica se esistono colloqui associati
-  db.get("SELECT COUNT(*) as count FROM interviews WHERE candidate_id = ?", [id], (err, row) => {
+  // Recupera info candidato per il log
+  db.get("SELECT first_name, last_name FROM candidates WHERE id = ?", [id], (err, candidate) => {
     if (err) return res.status(500).json({ message: "Errore DB" });
+    if (!candidate) return res.status(404).json({ message: "Candidato non trovato" });
 
-    if (row.count > 0) {
-      return res.status(400).json({
-        message: `Non è possibile eliminare il candidato: esistono ${row.count} colloqui associati. Elimina prima i colloqui.`
-      });
-    }
-
-    // Recupera info candidato per il log
-    db.get("SELECT first_name, last_name FROM candidates WHERE id = ?", [id], (err, candidate) => {
-      if (err) return res.status(500).json({ message: "Errore DB" });
-      if (!candidate) return res.status(404).json({ message: "Candidato non trovato" });
+    // Elimina colloqui associati
+    db.run("DELETE FROM interviews WHERE candidate_id = ?", [id], (err) => {
+      if (err) return res.status(500).json({ message: "Errore eliminazione colloqui" });
 
       // Elimina documenti associati
       db.run("DELETE FROM documents WHERE candidate_id = ?", [id], (err) => {
-        if (err) return res.status(500).json({ message: "Errore DB" });
+        if (err) return res.status(500).json({ message: "Errore eliminazione documenti" });
 
         // Elimina candidato
         db.run("DELETE FROM candidates WHERE id = ?", [id], function (err) {

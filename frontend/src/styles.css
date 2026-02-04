@@ -924,8 +924,8 @@ input, select, textarea, button {
 button {
   cursor: pointer;
   border: none;
-  background: #2563eb;
-  color: white;
+  background: transparent;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -3836,6 +3836,7 @@ button:disabled {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -4498,6 +4499,7 @@ button:disabled {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -4911,8 +4913,10 @@ button:disabled {
   border-radius: 12px;
   border: 2px solid var(--border);
   background: var(--bg-card);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .suitability-option:hover {
@@ -4925,17 +4929,17 @@ button:disabled {
   background: rgba(79,70,229,0.08);
 }
 
-.suitability-option.active.suitable {
+.suitability-option.active.option-suitable {
   border-color: #10b981;
   background: rgba(16,185,129,0.1);
 }
 
-.suitability-option.active.not-suitable {
+.suitability-option.active.option-not-suitable {
   border-color: #ef4444;
   background: rgba(239,68,68,0.1);
 }
 
-.suitability-option.active.pending {
+.suitability-option.active.option-pending {
   border-color: #f59e0b;
   background: rgba(245,158,11,0.1);
 }
@@ -4950,15 +4954,15 @@ button:disabled {
   height: 28px;
 }
 
-.suitability-option.suitable svg {
+.suitability-option.option-suitable svg {
   color: #10b981;
 }
 
-.suitability-option.not-suitable svg {
+.suitability-option.option-not-suitable svg {
   color: #ef4444;
 }
 
-.suitability-option.pending svg {
+.suitability-option.option-pending svg {
   color: #f59e0b;
 }
 
@@ -5158,6 +5162,7 @@ button:disabled {
   border: none;
   border-radius: 8px;
   background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -10826,19 +10831,19 @@ button:disabled {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .suitability-option.active.suitable {
+.dark-theme .suitability-option.active.option-suitable {
   background: rgba(16, 185, 129, 0.2);
   border-color: #10b981;
   color: #6ee7b7;
 }
 
-.dark-theme .suitability-option.active.not-suitable {
+.dark-theme .suitability-option.active.option-not-suitable {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
   color: #fca5a5;
 }
 
-.dark-theme .suitability-option.active.pending {
+.dark-theme .suitability-option.active.option-pending {
   background: rgba(245, 158, 11, 0.2);
   border-color: #f59e0b;
   color: #fcd34d;

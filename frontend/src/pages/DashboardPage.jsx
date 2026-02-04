@@ -1,7 +1,8 @@
 import { useAuth } from "../authContext";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import api from "../api";
+import MatrixEffect from "../components/MatrixEffect";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -10,6 +11,44 @@ export default function DashboardPage() {
   const [upcomingMeetings, setUpcomingMeetings] = useState([]);
   const [upcomingVehicles, setUpcomingVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [matrixActive, setMatrixActive] = useState(false);
+  const bufferRef = useRef("");
+  const timeoutRef = useRef(null);
+
+  // Easter egg: type "matrix" to activate
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (matrixActive) return;
+      if (e.key.length !== 1) return;
+
+      clearTimeout(timeoutRef.current);
+      bufferRef.current += e.key.toLowerCase();
+
+      if (bufferRef.current.includes("matrix")) {
+        bufferRef.current = "";
+        setMatrixActive(true);
+        return;
+      }
+
+      // Keep only last 10 chars
+      if (bufferRef.current.length > 10) {
+        bufferRef.current = bufferRef.current.slice(-10);
+      }
+
+      // Reset buffer after 2s of inactivity
+      timeoutRef.current = setTimeout(() => {
+        bufferRef.current = "";
+      }, 2000);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timeoutRef.current);
+    };
+  }, [matrixActive]);
+
+  const exitMatrix = useCallback(() => setMatrixActive(false), []);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -360,6 +399,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {matrixActive && <MatrixEffect onExit={exitMatrix} />}
     </div>
   );
 }

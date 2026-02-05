@@ -1,0 +1,41 @@
+# Dependencies - must be installed inside container for correct architecture
+node_modules
+**/node_modules
+
+# Git
+.git
+.gitignore
+
+# Development files
+.env
+.env.local
+.env.development
+*.log
+npm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build outputs (frontend dist is built in container)
+frontend/dist
+
+# Database (use volume mount instead)
+*.db
+*.sqlite
+
+# Test files
+coverage
+*.test.js
+*.spec.js
+__tests__
+
+# Documentation
+*.md
+!README.md

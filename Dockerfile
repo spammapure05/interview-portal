@@ -1,27 +1,37 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-COPY backend ./backend
-COPY frontend ./frontend
+# Copy frontend files
+COPY frontend/package*.json ./frontend/
 
+# Install frontend dependencies
 WORKDIR /app/frontend
-# durante il build vogliamo anche i devDependencies (vite, ecc.)
 ENV NODE_ENV=development
-RUN npm install --legacy-peer-deps && npm run build
+RUN npm install --legacy-peer-deps
 
-FROM node:20-alpine
+# Copy frontend source and build
+COPY frontend ./
+RUN npm run build
 
-RUN apk add --no-cache curl
+# Production image
+FROM node:20-slim
 
-WORKDIR /app
-
-COPY --from=builder /app/backend ./backend
-RUN mkdir -p ./backend/public
-COPY --from=builder /app/frontend/dist ./backend/public
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/backend
+
+# Copy backend package files and install dependencies
+COPY backend/package*.json ./
 RUN npm install --omit=dev --legacy-peer-deps
+
+# Copy backend source code
+COPY backend ./
+
+# Copy frontend build
+RUN mkdir -p ./public
+COPY --from=builder /app/frontend/dist ./public
 
 ENV PORT=4000
 ENV NODE_ENV=production
@@ -29,4 +39,3 @@ ENV NODE_ENV=production
 EXPOSE 4000
 
 CMD ["node", "server.js"]
-

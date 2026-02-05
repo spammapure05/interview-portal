@@ -27,8 +27,10 @@ import bookingRequestsRoutes from "./routes/bookingRequests.js";
 import notificationsRoutes from "./routes/notifications.js";
 import userPreferencesRoutes from "./routes/userPreferences.js";
 import { startNotificationScheduler } from "./services/emailService.js";
-import { authenticator } from "otplib";
+import * as OTPLib from "otplib";
 import twoFactorRoutes, { verifyBackupCode } from "./routes/twoFactor.js";
+
+const authenticator = OTPLib.authenticator;
 
 // ===== SECURITY: Verifica JWT_SECRET obbligatorio =====
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "supersecret" || process.env.JWT_SECRET === "supersecretcambialo") {

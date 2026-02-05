@@ -1,6 +1,8 @@
 import express from "express";
-import { authenticator } from "otplib";
+import * as OTPLib from "otplib";
 import QRCode from "qrcode";
+
+const authenticator = OTPLib.authenticator;
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import db from "../db.js";

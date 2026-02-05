@@ -30,6 +30,12 @@ export default function LoginPage() {
         return;
       }
 
+      if (result?.requires2FASetup) {
+        // Redirect to mandatory 2FA setup page
+        navigate("/setup-2fa");
+        return;
+      }
+
       setLoginSuccess(true);
       // Attendi l'animazione prima di navigare
       setTimeout(() => {

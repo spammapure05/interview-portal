@@ -3577,6 +3577,7 @@ button:disabled {
   border-radius: 12px;
   font-size: 0.95rem;
   background: var(--bg-card);
+  color: var(--text-primary);
   transition: all 0.2s ease;
   width: 100%;
   margin: 0;
@@ -10963,6 +10964,18 @@ button:disabled {
   color: var(--text-secondary);
 }
 
+.dark-theme .modal-content input,
+.dark-theme .modal-content select,
+.dark-theme .modal-content textarea {
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.dark-theme .modal-content input::placeholder {
+  color: var(--text-muted);
+}
+
 .dark-theme .modal-close {
   background: var(--bg-lighter);
   border-color: var(--border);
@@ -11168,9 +11181,27 @@ button:disabled {
 /* Form inputs with rgba backgrounds */
 .dark-theme .form-input,
 .dark-theme .form-select,
-.dark-theme .form-textarea {
+.dark-theme .form-textarea,
+.dark-theme input[type="text"],
+.dark-theme input[type="email"],
+.dark-theme input[type="password"],
+.dark-theme input[type="number"],
+.dark-theme input[type="tel"],
+.dark-theme input[type="url"],
+.dark-theme input[type="date"],
+.dark-theme input[type="time"],
+.dark-theme input[type="datetime-local"],
+.dark-theme select,
+.dark-theme textarea {
   background: var(--bg-input);
   border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.dark-theme .form-input::placeholder,
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+  color: var(--text-muted);
 }
 
 /* Empty states */
@@ -11888,6 +11919,44 @@ button:disabled {
   height: 12px;
 }
 
+/* 2FA Badge Variants */
+.user-2fa-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.user-2fa-required {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Success Icon Button */
+.btn-success-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-success-icon:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.btn-success-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* 2FA Reset Button in User Card */
 .user-card-actions .btn-warning-icon {
   margin-left: auto;
@@ -12015,5 +12084,240 @@ button:disabled {
 
 .dark-theme .btn-warning-icon:hover {
   background: rgba(245, 158, 11, 0.25);
+}
+
+.dark-theme .user-2fa-active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dark-theme .user-2fa-required {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dark-theme .btn-success-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+
+.dark-theme .btn-success-icon:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+/* ============================================ */
+/* MANDATORY 2FA SETUP PAGE                     */
+/* ============================================ */
+
+.mandatory-2fa-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+}
+
+.mandatory-2fa-container {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.mandatory-2fa-header {
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  color: white;
+}
+
+.mandatory-2fa-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mandatory-2fa-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: white;
+}
+
+.mandatory-2fa-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.mandatory-2fa-header p {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mandatory-2fa-header .user-email {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.mandatory-2fa-container .setup-steps {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mandatory-2fa-content {
+  padding: 2rem;
+}
+
+.mandatory-2fa-footer {
+  padding: 1rem 2rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-link-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-link-danger:hover {
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
+.btn-link-danger svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Backup codes styling */
+.setup-backup-codes {
+  text-align: center;
+}
+
+.backup-codes-intro {
+  margin-bottom: 1.5rem;
+}
+
+.backup-codes-intro svg {
+  width: 48px;
+  height: 48px;
+  color: #3B82F6;
+  margin-bottom: 0.75rem;
+}
+
+.backup-codes-intro h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.backup-codes-intro p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.backup-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.backup-code-item {
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.backup-code-item code {
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.backup-codes-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.backup-codes-warning svg {
+  width: 20px;
+  height: 20px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.backup-codes-warning p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+/* Dark theme for mandatory 2FA page */
+.dark-theme .mandatory-2fa-page {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.dark-theme .mandatory-2fa-container {
+  background: var(--bg-card);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.dark-theme .mandatory-2fa-container .setup-steps {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+}
+
+.dark-theme .mandatory-2fa-footer {
+  border-color: var(--border);
+}
+
+.dark-theme .backup-code-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border);
+}
+
+.dark-theme .backup-codes-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dark-theme .backup-codes-warning p {
+  color: #fbbf24;
 }
 

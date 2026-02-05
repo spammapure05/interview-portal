@@ -9,6 +9,8 @@ export default function UsersPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [reset2FAConfirm, setReset2FAConfirm] = useState(null);
   const [reset2FALoading, setReset2FALoading] = useState(false);
+  const [force2FAConfirm, setForce2FAConfirm] = useState(null);
+  const [force2FALoading, setForce2FALoading] = useState(false);
 
   // Form state
   const [email, setEmail] = useState("");
@@ -120,6 +122,21 @@ export default function UsersPage() {
       setError(err.response?.data?.message || "Errore durante il reset 2FA");
     } finally {
       setReset2FALoading(false);
+    }
+  };
+
+  const handleForce2FA = async (required) => {
+    if (!force2FAConfirm) return;
+    setForce2FALoading(true);
+    try {
+      await api.post(`/2fa/admin/require/${force2FAConfirm.id}`, { required });
+      setForce2FAConfirm(null);
+      load();
+    } catch (err) {
+      console.error("Errore impostazione 2FA:", err);
+      setError(err.response?.data?.message || "Errore durante l'impostazione 2FA");
+    } finally {
+      setForce2FALoading(false);
     }
   };
 
@@ -255,18 +272,26 @@ export default function UsersPage() {
                     <span className={`user-role-badge role-${user.role}`}>
                       {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
                     </span>
-                    {user.totp_enabled === 1 && (
-                      <span className="user-2fa-badge">
+                    {user.totp_enabled === 1 ? (
+                      <span className="user-2fa-badge user-2fa-active">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         </svg>
-                        2FA
+                        2FA Attiva
                       </span>
-                    )}
+                    ) : user.totp_required === 1 ? (
+                      <span className="user-2fa-badge user-2fa-required">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        2FA Richiesta
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="user-actions">
-                  {user.totp_enabled === 1 && (
+                  {/* 2FA Actions */}
+                  {user.totp_enabled === 1 ? (
                     <button
                       className="btn-icon btn-warning-icon"
                       title="Reset 2FA"
@@ -276,6 +301,17 @@ export default function UsersPage() {
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         <line x1="9" y1="9" x2="15" y2="15"/>
                         <line x1="15" y1="9" x2="9" y2="15"/>
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      className={`btn-icon ${user.totp_required === 1 ? 'btn-warning-icon' : 'btn-success-icon'}`}
+                      title={user.totp_required === 1 ? "Rimuovi obbligo 2FA" : "Forza 2FA"}
+                      onClick={() => setForce2FAConfirm(user)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        {user.totp_required !== 1 && <path d="M9 12l2 2 4-4"/>}
                       </svg>
                     </button>
                   )}
@@ -554,6 +590,50 @@ export default function UsersPage() {
               <button className="btn-warning" onClick={handleReset2FA} disabled={reset2FALoading}>
                 {reset2FALoading ? "Reset in corso..." : "Reset 2FA"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Force 2FA Confirmation Modal */}
+      {force2FAConfirm && (
+        <div className="modal-overlay" onClick={() => setForce2FAConfirm(null)}>
+          <div className="modal-content modal-small" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{force2FAConfirm.totp_required === 1 ? "Rimuovi Obbligo 2FA" : "Forza 2FA"}</h2>
+              <button className="modal-close" onClick={() => setForce2FAConfirm(null)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              {force2FAConfirm.totp_required === 1 ? (
+                <>
+                  <p>Vuoi rimuovere l'obbligo di 2FA per <strong>{force2FAConfirm.email}</strong>?</p>
+                  <p className="text-muted">L'utente potrà accedere senza configurare la 2FA.</p>
+                </>
+              ) : (
+                <>
+                  <p>Vuoi rendere obbligatoria la 2FA per <strong>{force2FAConfirm.email}</strong>?</p>
+                  <p className="text-muted">Al prossimo login, l'utente dovrà configurare l'autenticazione a due fattori prima di poter accedere.</p>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setForce2FAConfirm(null)}>
+                Annulla
+              </button>
+              {force2FAConfirm.totp_required === 1 ? (
+                <button className="btn-warning" onClick={() => handleForce2FA(false)} disabled={force2FALoading}>
+                  {force2FALoading ? "Aggiornamento..." : "Rimuovi Obbligo"}
+                </button>
+              ) : (
+                <button className="btn-primary" onClick={() => handleForce2FA(true)} disabled={force2FALoading}>
+                  {force2FALoading ? "Aggiornamento..." : "Forza 2FA"}
+                </button>
+              )}
             </div>
           </div>
         </div>

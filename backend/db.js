@@ -483,6 +483,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE users ADD COLUMN totp_secret TEXT`, (err) => {});
   db.run(`ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0`, (err) => {});
   db.run(`ALTER TABLE users ADD COLUMN backup_codes TEXT`, (err) => {});
+  db.run(`ALTER TABLE users ADD COLUMN totp_required INTEGER DEFAULT 0`, (err) => {}); // Admin can force 2FA
 
   // Trusted devices for 2FA
   db.run(`

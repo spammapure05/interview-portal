@@ -10,7 +10,7 @@ const router = express.Router();
 // Lista utenti (solo admin)
 router.get("/", requireRole("admin"), (req, res) => {
   db.all(
-    "SELECT id, email, role FROM users ORDER BY email",
+    "SELECT id, email, role, totp_enabled, totp_required FROM users ORDER BY email",
     (err, rows) => {
       if (err) return res.status(500).json({ message: "Errore DB" });
       res.json(rows);
@@ -22,7 +22,7 @@ router.get("/", requireRole("admin"), (req, res) => {
 router.get("/:id", requireRole("admin"), (req, res) => {
   const { id } = req.params;
   db.get(
-    "SELECT id, email, role FROM users WHERE id = ?",
+    "SELECT id, email, role, totp_enabled, totp_required FROM users WHERE id = ?",
     [id],
     (err, row) => {
       if (err) return res.status(500).json({ message: "Errore DB" });

@@ -423,6 +423,53 @@ router.post("/admin/reset/:userId", requireRole("admin"), async (req, res) => {
   }
 });
 
+// POST /admin/2fa/require/:userId - Admin sets 2FA as mandatory for user
+router.post("/admin/require/:userId", requireRole("admin"), async (req, res) => {
+  const targetUserId = req.params.userId;
+  const adminId = req.user.id;
+  const { required } = req.body; // true = force, false = remove requirement
+
+  try {
+    // Get target user info
+    const targetUser = await new Promise((resolve, reject) => {
+      db.get("SELECT email, totp_enabled, totp_required FROM users WHERE id = ?", [targetUserId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: "Utente non trovato" });
+    }
+
+    // Update totp_required
+    await new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE users SET totp_required = ? WHERE id = ?",
+        [required ? 1 : 0, targetUserId],
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.changes);
+        }
+      );
+    });
+
+    // Log to audit
+    db.run(
+      "INSERT INTO audit_log (user_id, user_email, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?)",
+      [adminId, req.user.email, required ? "admin_require_2fa" : "admin_unrequire_2fa", "2fa", parseInt(targetUserId), JSON.stringify({
+        target_user_email: targetUser.email,
+        action: required ? "Admin forced 2FA requirement" : "Admin removed 2FA requirement"
+      })]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error setting 2FA requirement:", err);
+    res.status(500).json({ message: "Errore durante l'aggiornamento" });
+  }
+});
+
 // Export helper functions for use in auth routes
 export { verifyBackupCode, verifyTOTP };
 

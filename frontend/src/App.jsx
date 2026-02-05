@@ -18,10 +18,11 @@ import MyRequestsPage from "./pages/MyRequestsPage";
 import AdminRequestsPage from "./pages/AdminRequestsPage";
 import TwoFactorVerifyPage from "./pages/TwoFactorVerifyPage";
 import SecuritySettingsPage from "./pages/SecuritySettingsPage";
+import MandatoryTwoFactorSetupPage from "./pages/MandatoryTwoFactorSetupPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, mustSetup2FA } = useAuth();
 
   // While auth is loading, show a loading screen
   if (isLoading) {
@@ -33,6 +34,10 @@ function PrivateRoute({ children }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
+
+  // Redirect to mandatory 2FA setup if required
+  if (mustSetup2FA) return <Navigate to="/setup-2fa" replace />;
+
   return children;
 }
 
@@ -48,6 +53,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/verify-2fa" element={<TwoFactorVerifyPage />} />
+      <Route path="/setup-2fa" element={<MandatoryTwoFactorSetupPage />} />
 
       <Route
         path="/"

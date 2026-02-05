@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
+  const [mustSetup2FA, setMustSetup2FA] = useState(false);
 
   const timeoutRef = useRef(null);
   const warningRef = useRef(null);
@@ -63,9 +64,19 @@ export function AuthProvider({ children }) {
       return { requires2FA: true };
     }
 
+    // Handle mandatory 2FA setup (user has totp_required=1 but hasn't set up 2FA yet)
+    if (res.data.requires2FASetup) {
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("lastActivity", Date.now().toString());
+      setUser(res.data.user);
+      setMustSetup2FA(true);
+      return { requires2FASetup: true };
+    }
+
     localStorage.setItem("token", res.data.token);
     localStorage.setItem("lastActivity", Date.now().toString());
     setUser(res.data.user);
+    setMustSetup2FA(false);
     return { requires2FA: false };
   };
 
@@ -95,7 +106,13 @@ export function AuthProvider({ children }) {
     setShowTimeoutWarning(false);
     setRequires2FA(false);
     setTempToken(null);
+    setMustSetup2FA(false);
     clearAllTimers();
+  };
+
+  // Called after user completes mandatory 2FA setup
+  const complete2FASetup = () => {
+    setMustSetup2FA(false);
   };
 
   const resetTimeout = () => {
@@ -139,6 +156,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.get("/auth/me");
       setUser(res.data.user);
+      // Check if user has mustSetup2FA flag (set during login when totp_required but not enabled)
+      if (res.data.user?.mustSetup2FA) {
+        setMustSetup2FA(true);
+      }
     } catch {
       setUser(null);
     } finally {
@@ -215,7 +236,9 @@ export function AuthProvider({ children }) {
       extendSession,
       requires2FA,
       tempToken,
-      verify2FA
+      verify2FA,
+      mustSetup2FA,
+      complete2FASetup
     }}>
       {children}
     </AuthContext.Provider>

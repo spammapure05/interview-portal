@@ -109,6 +109,22 @@ app.post("/api/auth/login", loginLimiter, (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ message: "Credenziali non valide" });
 
+    // Check if 2FA setup is mandatory but not configured yet
+    if (user.totp_required === 1 && user.totp_enabled !== 1) {
+      // User must set up 2FA - issue token with setup flag
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role, mustSetup2FA: true },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" } // Longer time for setup
+      );
+
+      return res.json({
+        requires2FASetup: true,
+        token,
+        user: { id: user.id, email: user.email, role: user.role, mustSetup2FA: true }
+      });
+    }
+
     // Check if 2FA is enabled
     if (user.totp_enabled === 1) {
       // Check if device is trusted

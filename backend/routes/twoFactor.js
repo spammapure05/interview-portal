@@ -1,8 +1,6 @@
 import express from "express";
-import * as OTPLib from "otplib";
+import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
-
-const authenticator = OTPLib.authenticator;
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import db from "../db.js";
@@ -10,11 +8,38 @@ import { requireRole } from "../rolesMiddleware.js";
 
 const router = express.Router();
 
-// Configure TOTP settings
-authenticator.options = {
-  window: 1,  // Allow 30 seconds tolerance
-  step: 30   // 30-second intervals
-};
+// Helper: generate a random base32 secret
+function generateSecret() {
+  return new OTPAuth.Secret({ size: 20 }).base32;
+}
+
+// Helper: verify TOTP code
+function verifyTOTP(token, secret) {
+  const totp = new OTPAuth.TOTP({
+    issuer: "DCS Group Portal",
+    algorithm: "SHA1",
+    digits: 6,
+    period: 30,
+    secret: OTPAuth.Secret.fromBase32(secret)
+  });
+
+  // validate returns null if invalid, or delta (offset) if valid
+  const delta = totp.validate({ token, window: 1 });
+  return delta !== null;
+}
+
+// Helper: generate otpauth URI for QR code
+function generateOTPAuthURI(email, secret) {
+  const totp = new OTPAuth.TOTP({
+    issuer: "DCS Group Portal",
+    label: email,
+    algorithm: "SHA1",
+    digits: 6,
+    period: 30,
+    secret: OTPAuth.Secret.fromBase32(secret)
+  });
+  return totp.toString();
+}
 
 // Helper: generate backup codes
 function generateBackupCodes(count = 10) {
@@ -105,11 +130,11 @@ router.post("/setup", async (req, res) => {
     }
 
     // Generate new secret
-    const secret = authenticator.generateSecret();
+    const secret = generateSecret();
 
     // Generate QR code
-    const otpauth = authenticator.keyuri(userEmail, "DCS Group Portal", secret);
-    const qrCode = await QRCode.toDataURL(otpauth);
+    const otpauthUri = generateOTPAuthURI(userEmail, secret);
+    const qrCode = await QRCode.toDataURL(otpauthUri);
 
     res.json({
       secret,
@@ -133,7 +158,7 @@ router.post("/enable", async (req, res) => {
 
   try {
     // Verify the TOTP code
-    const isValid = authenticator.verify({ token: code, secret });
+    const isValid = verifyTOTP(code, secret);
     if (!isValid) {
       return res.status(400).json({ message: "Codice non valido. Riprova." });
     }
@@ -203,7 +228,7 @@ router.post("/disable", async (req, res) => {
     }
 
     // Verify TOTP code
-    const isValid = authenticator.verify({ token: code, secret: user.totp_secret });
+    const isValid = verifyTOTP(code, user.totp_secret);
     if (!isValid) {
       return res.status(400).json({ message: "Codice 2FA non valido" });
     }
@@ -399,6 +424,6 @@ router.post("/admin/reset/:userId", requireRole("admin"), async (req, res) => {
 });
 
 // Export helper functions for use in auth routes
-export { verifyBackupCode };
+export { verifyBackupCode, verifyTOTP };
 
 export default router;

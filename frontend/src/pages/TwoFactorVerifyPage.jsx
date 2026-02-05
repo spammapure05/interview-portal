@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
+import "../styles.css";
 
 export default function TwoFactorVerifyPage() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -87,9 +88,18 @@ export default function TwoFactorVerifyPage() {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-bg">
+      {/* Floating particles */}
+      <div className="login-particles">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
       <div className="login-card twofa-card">
-        <div className="login-header">
+        <div className="login-brand">
           <div className="login-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -97,22 +107,22 @@ export default function TwoFactorVerifyPage() {
               <circle cx="12" cy="16" r="1"/>
             </svg>
           </div>
-          <h1 className="login-title">Verifica 2FA</h1>
-          <p className="login-subtitle">
+          <div className="login-logo">Verifica 2FA</div>
+          <div className="login-tag">
             {useBackupCode
               ? "Inserisci uno dei tuoi codici di backup"
               : "Inserisci il codice dalla tua app di autenticazione"
             }
-          </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && (
-            <div className="login-error">
+            <div className="error login-error">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               {error}
             </div>

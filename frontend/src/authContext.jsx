@@ -8,11 +8,34 @@ const SESSION_TIMEOUT = 30 * 60 * 1000;
 // Warning before logout (1 minute)
 const WARNING_TIME = 60 * 1000;
 
+// Helper: get or create device ID
+const getOrCreateDeviceId = () => {
+  let deviceId = localStorage.getItem("deviceId");
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    localStorage.setItem("deviceId", deviceId);
+  }
+  return deviceId;
+};
+
+// Helper: get device name
+const getDeviceName = () => {
+  const ua = navigator.userAgent;
+  if (ua.includes("Windows")) return "Windows PC";
+  if (ua.includes("Mac")) return "Mac";
+  if (ua.includes("iPhone")) return "iPhone";
+  if (ua.includes("Android")) return "Android";
+  if (ua.includes("Linux")) return "Linux PC";
+  return "Browser";
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState(null);
 
   const timeoutRef = useRef(null);
   const warningRef = useRef(null);
@@ -31,10 +54,38 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (identifier, password) => {
-    const res = await api.post("/auth/login", { identifier, password });
+    const deviceId = getOrCreateDeviceId();
+    const res = await api.post("/auth/login", { identifier, password, deviceId });
+
+    if (res.data.requires2FA) {
+      setTempToken(res.data.tempToken);
+      setRequires2FA(true);
+      return { requires2FA: true };
+    }
+
     localStorage.setItem("token", res.data.token);
     localStorage.setItem("lastActivity", Date.now().toString());
     setUser(res.data.user);
+    return { requires2FA: false };
+  };
+
+  const verify2FA = async (code, trustDevice = false) => {
+    const deviceId = getOrCreateDeviceId();
+    const deviceName = getDeviceName();
+
+    const res = await api.post("/auth/verify-2fa", {
+      tempToken,
+      code,
+      trustDevice,
+      deviceId,
+      deviceName
+    });
+
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("lastActivity", Date.now().toString());
+    setUser(res.data.user);
+    setRequires2FA(false);
+    setTempToken(null);
   };
 
   const logout = () => {
@@ -42,6 +93,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("lastActivity");
     setUser(null);
     setShowTimeoutWarning(false);
+    setRequires2FA(false);
+    setTempToken(null);
     clearAllTimers();
   };
 
@@ -152,7 +205,18 @@ export function AuthProvider({ children }) {
   }, [user]); // Solo user come dipendenza
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading, showTimeoutWarning, timeRemaining, extendSession }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      isLoading,
+      showTimeoutWarning,
+      timeRemaining,
+      extendSession,
+      requires2FA,
+      tempToken,
+      verify2FA
+    }}>
       {children}
     </AuthContext.Provider>
   );

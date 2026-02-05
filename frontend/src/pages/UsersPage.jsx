@@ -7,6 +7,8 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [reset2FAConfirm, setReset2FAConfirm] = useState(null);
+  const [reset2FALoading, setReset2FALoading] = useState(false);
 
   // Form state
   const [email, setEmail] = useState("");
@@ -104,6 +106,21 @@ export default function UsersPage() {
     setShowForm(true);
     setShowPassword(false);
     setGeneratedPassword("");
+  };
+
+  const handleReset2FA = async () => {
+    if (!reset2FAConfirm) return;
+    setReset2FALoading(true);
+    try {
+      await api.post(`/2fa/admin/reset/${reset2FAConfirm.id}`);
+      setReset2FAConfirm(null);
+      load();
+    } catch (err) {
+      console.error("Errore reset 2FA:", err);
+      setError(err.response?.data?.message || "Errore durante il reset 2FA");
+    } finally {
+      setReset2FALoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -234,11 +251,34 @@ export default function UsersPage() {
                 </div>
                 <div className="user-info">
                   <span className="user-email">{user.email}</span>
-                  <span className={`user-role-badge role-${user.role}`}>
-                    {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
-                  </span>
+                  <div className="user-badges">
+                    <span className={`user-role-badge role-${user.role}`}>
+                      {user.role === "admin" ? "Amministratore" : user.role === "viewer" ? "Visualizzatore" : "Segreteria"}
+                    </span>
+                    {user.totp_enabled === 1 && (
+                      <span className="user-2fa-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        2FA
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="user-actions">
+                  {user.totp_enabled === 1 && (
+                    <button
+                      className="btn-icon btn-warning-icon"
+                      title="Reset 2FA"
+                      onClick={() => setReset2FAConfirm(user)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="btn-icon"
                     title="Invia Credenziali"
@@ -484,6 +524,35 @@ export default function UsersPage() {
               </button>
               <button className="btn-danger" onClick={() => handleDelete(deleteConfirm.id)}>
                 Elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset 2FA Confirmation Modal */}
+      {reset2FAConfirm && (
+        <div className="modal-overlay" onClick={() => setReset2FAConfirm(null)}>
+          <div className="modal-content modal-small" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Reset 2FA</h2>
+              <button className="modal-close" onClick={() => setReset2FAConfirm(null)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Sei sicuro di voler disattivare l'autenticazione a due fattori per <strong>{reset2FAConfirm.email}</strong>?</p>
+              <p className="text-muted">L'utente dovrà riconfigurare la 2FA se vorrà riattivarla.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setReset2FAConfirm(null)}>
+                Annulla
+              </button>
+              <button className="btn-warning" onClick={handleReset2FA} disabled={reset2FALoading}>
+                {reset2FALoading ? "Reset in corso..." : "Reset 2FA"}
               </button>
             </div>
           </div>

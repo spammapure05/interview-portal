@@ -371,6 +371,12 @@ export default function Layout() {
                     </div>
                   </div>
                   <div className="user-dropdown-divider"></div>
+                  <Link to="/security-settings" className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Sicurezza
+                  </Link>
                   <button className="user-dropdown-item logout-item" onClick={handleLogout}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

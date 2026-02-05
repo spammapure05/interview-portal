@@ -477,6 +477,28 @@ db.serialize(() => {
       FOREIGN KEY(user_id) REFERENCES users(id)
     )
   `);
+
+  // ===== 2FA - TWO FACTOR AUTHENTICATION =====
+  // Migration: add 2FA columns to users
+  db.run(`ALTER TABLE users ADD COLUMN totp_secret TEXT`, (err) => {});
+  db.run(`ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE users ADD COLUMN backup_codes TEXT`, (err) => {});
+
+  // Trusted devices for 2FA
+  db.run(`
+    CREATE TABLE IF NOT EXISTS trusted_devices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      device_id TEXT NOT NULL,
+      device_name TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      expires_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_device ON trusted_devices(device_id)`);
 });
 
 export default db;

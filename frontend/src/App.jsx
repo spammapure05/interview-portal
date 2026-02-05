@@ -16,6 +16,8 @@ import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import BookingRequestPage from "./pages/BookingRequestPage";
 import MyRequestsPage from "./pages/MyRequestsPage";
 import AdminRequestsPage from "./pages/AdminRequestsPage";
+import TwoFactorVerifyPage from "./pages/TwoFactorVerifyPage";
+import SecuritySettingsPage from "./pages/SecuritySettingsPage";
 import Layout from "./components/Layout";
 
 function PrivateRoute({ children }) {
@@ -45,6 +47,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/verify-2fa" element={<TwoFactorVerifyPage />} />
 
       <Route
         path="/"
@@ -69,6 +72,7 @@ export default function App() {
         <Route path="request-booking" element={<BookingRequestPage />} />
         <Route path="my-requests" element={<MyRequestsPage />} />
         <Route path="admin-requests" element={<AdminRequestsPage />} />
+        <Route path="security-settings" element={<SecuritySettingsPage />} />
       </Route>
     </Routes>
   );

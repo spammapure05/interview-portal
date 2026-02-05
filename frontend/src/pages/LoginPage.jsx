@@ -22,7 +22,14 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await login(identifier, password);
+      const result = await login(identifier, password);
+
+      if (result?.requires2FA) {
+        // Redirect to 2FA verification page
+        navigate("/verify-2fa");
+        return;
+      }
+
       setLoginSuccess(true);
       // Attendi l'animazione prima di navigare
       setTimeout(() => {

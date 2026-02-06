@@ -500,6 +500,131 @@ db.serialize(() => {
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_device ON trusted_devices(device_id)`);
+
+  // ===== PIPELINE CANDIDATI (KANBAN) =====
+  db.run(`
+    CREATE TABLE IF NOT EXISTS pipeline_stages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      color TEXT DEFAULT '#3B82F6',
+      order_index INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Migration: add pipeline_stage_id to candidates
+  db.run(`ALTER TABLE candidates ADD COLUMN pipeline_stage_id INTEGER REFERENCES pipeline_stages(id)`, (err) => {});
+
+  // Migration: add position_applied to candidates (per ruolo a cui si candidano)
+  db.run(`ALTER TABLE candidates ADD COLUMN position_applied TEXT`, (err) => {});
+
+  // Insert default pipeline stages
+  db.run(`
+    INSERT OR IGNORE INTO pipeline_stages (id, name, description, color, order_index)
+    VALUES
+      (1, 'Nuovo', 'Candidatura appena ricevuta', '#94a3b8', 0),
+      (2, 'Screening', 'In fase di valutazione CV', '#f59e0b', 1),
+      (3, 'Colloquio 1', 'Primo colloquio', '#3b82f6', 2),
+      (4, 'Colloquio 2', 'Secondo colloquio / tecnico', '#8b5cf6', 3),
+      (5, 'Offerta', 'Proposta economica inviata', '#10b981', 4),
+      (6, 'Assunto', 'Candidato assunto', '#059669', 5),
+      (7, 'Archiviato', 'Non idoneo o ritirato', '#ef4444', 6)
+  `, (err) => {});
+
+  // ===== SCORECARD SYSTEM =====
+  // Template per tipologia di ruolo
+  db.run(`
+    CREATE TABLE IF NOT EXISTS scorecard_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      department TEXT,
+      description TEXT,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Categorie di criteri (es. Competenze Tecniche, Soft Skills, Lingue)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS scorecard_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      template_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      weight REAL DEFAULT 1.0,
+      order_index INTEGER DEFAULT 0,
+      FOREIGN KEY(template_id) REFERENCES scorecard_templates(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Singoli criteri di valutazione
+  db.run(`
+    CREATE TABLE IF NOT EXISTS scorecard_criteria (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      description_low TEXT,
+      description_high TEXT,
+      order_index INTEGER DEFAULT 0,
+      FOREIGN KEY(category_id) REFERENCES scorecard_categories(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Domande guida per il colloquio
+  db.run(`
+    CREATE TABLE IF NOT EXISTS interview_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      template_id INTEGER NOT NULL,
+      question TEXT NOT NULL,
+      category TEXT DEFAULT 'general',
+      order_index INTEGER DEFAULT 0,
+      FOREIGN KEY(template_id) REFERENCES scorecard_templates(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Valutazioni effettive per colloquio
+  db.run(`
+    CREATE TABLE IF NOT EXISTS interview_scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      interview_id INTEGER NOT NULL,
+      criteria_id INTEGER NOT NULL,
+      score INTEGER CHECK (score BETWEEN 1 AND 5),
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(interview_id, criteria_id),
+      FOREIGN KEY(interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+      FOREIGN KEY(criteria_id) REFERENCES scorecard_criteria(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Verdetto finale del colloquio
+  db.run(`
+    CREATE TABLE IF NOT EXISTS interview_verdicts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      interview_id INTEGER UNIQUE NOT NULL,
+      template_id INTEGER,
+      recommendation TEXT CHECK(recommendation IN ('strongly_recommended', 'recommended', 'with_reservations', 'not_recommended')),
+      total_score REAL,
+      final_notes TEXT,
+      completed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER,
+      FOREIGN KEY(interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+      FOREIGN KEY(template_id) REFERENCES scorecard_templates(id),
+      FOREIGN KEY(created_by) REFERENCES users(id)
+    )
+  `);
+
+  // Migration: add scorecard_template_id to interviews
+  db.run(`ALTER TABLE interviews ADD COLUMN scorecard_template_id INTEGER REFERENCES scorecard_templates(id)`, (err) => {});
+
+  // Indici per performance
+  db.run(`CREATE INDEX IF NOT EXISTS idx_interview_scores_interview ON interview_scores(interview_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_scorecard_criteria_category ON scorecard_criteria(category_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_scorecard_categories_template ON scorecard_categories(template_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_candidates_pipeline ON candidates(pipeline_stage_id)`);
 });
 
 export default db;

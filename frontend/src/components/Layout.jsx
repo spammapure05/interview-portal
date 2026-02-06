@@ -99,7 +99,7 @@ export default function Layout() {
 
               {/* Dropdown Colloqui - Non visibile per i viewer */}
               {user.role !== "viewer" && (
-                <div className={`nav-dropdown ${isDropdownActive(["/calendar", "/candidates"]) ? "has-active" : ""}`}>
+                <div className={`nav-dropdown ${isDropdownActive(["/calendar", "/candidates", "/pipeline"]) ? "has-active" : ""}`}>
                   <button
                     className={`nav-link dropdown-toggle ${openDropdown === "colloqui" ? "open" : ""}`}
                     onClick={() => toggleDropdown("colloqui")}
@@ -117,6 +117,15 @@ export default function Layout() {
                   </button>
                   {openDropdown === "colloqui" && (
                     <div className="dropdown-menu">
+                      <Link to="/pipeline" className={`dropdown-item ${isActive("/pipeline") ? "active" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="3" width="7" height="7" rx="1"/>
+                          <rect x="14" y="3" width="7" height="7" rx="1"/>
+                          <rect x="3" y="14" width="7" height="7" rx="1"/>
+                          <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        Pipeline Candidati
+                      </Link>
                       <Link to="/calendar" className={`dropdown-item ${isActive("/calendar") ? "active" : ""}`}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>

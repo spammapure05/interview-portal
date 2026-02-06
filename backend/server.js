@@ -26,6 +26,8 @@ import exportRoutes from "./routes/export.js";
 import bookingRequestsRoutes from "./routes/bookingRequests.js";
 import notificationsRoutes from "./routes/notifications.js";
 import userPreferencesRoutes from "./routes/userPreferences.js";
+import pipelineRoutes from "./routes/pipeline.js";
+import scorecardRoutes from "./routes/scorecard.js";
 import { startNotificationScheduler } from "./services/emailService.js";
 import twoFactorRoutes, { verifyBackupCode, verifyTOTP } from "./routes/twoFactor.js";
 
@@ -314,6 +316,8 @@ app.use("/api/booking-requests", bookingRequestsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/preferences", userPreferencesRoutes);
 app.use("/api/2fa", twoFactorRoutes);
+app.use("/api/pipeline", pipelineRoutes);
+app.use("/api/scorecard", scorecardRoutes);
 
 // Static frontend (per deploy in un solo container)
 const publicDir = path.join(__dirname, "public");

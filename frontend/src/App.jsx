@@ -5,7 +5,8 @@ import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
 import CandidateListPage from "./pages/CandidateListPage";
 import CandidateDetailPage from "./pages/CandidateDetailPage";
-import StatsPage from "./pages/StatsPage";
+import StatsPage from "./pages/StatsPageAdvanced";
+import PipelinePage from "./pages/PipelinePage";
 import UsersPage from "./pages/UsersPage";
 import RoomsPage from "./pages/RoomsPage";
 import RoomCalendarPage from "./pages/RoomCalendarPage";
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="calendar" element={<NoViewerRoute><CalendarPage /></NoViewerRoute>} />
         <Route path="candidates" element={<NoViewerRoute><CandidateListPage /></NoViewerRoute>} />
         <Route path="candidates/:id" element={<NoViewerRoute><CandidateDetailPage /></NoViewerRoute>} />
+        <Route path="pipeline" element={<NoViewerRoute><PipelinePage /></NoViewerRoute>} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="rooms" element={<RoomsPage />} />
